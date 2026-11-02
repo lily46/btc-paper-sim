@@ -1,0 +1,25 @@
+[project]
+name = "btc-paper-sim"
+version = "1.0.0"
+description = "bitFlyer の実データを使った Bitcoin 仮想売買シミュレーター（ペーパートレード専用）"
+requires-python = ">=3.12"
+# 実行時の依存ライブラリはゼロ（標準ライブラリのみ）。
+# GitHub Actions での pip install 時間をなくし、無料枠を節約するため。
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+btcsim = "btcsim.run:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,70 @@
+name: paper-trade-tick
+
+on:
+  schedule:
+    # 10 分ごと。GitHub の cron は数分遅延・まれに欠落するため、
+    # 実際の取得時刻は state/state.json に必ず記録している。
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "冪等チェックを無視して実行（同一10分枠でも処理する）"
+        type: boolean
+        default: false
+      report_only:
+        description: "売買せずレポート/ダッシュボードのみ再生成"
+        type: boolean
+        default: false
+
+# 同時実行防止（前の実行を取り消さずに直列化する）
+concurrency:
+  group: paper-trade-tick
+  cancel-in-progress: false
+
+permissions:
+  contents: write          # state/ docs/ reports/ を同じリポジトリに commit するため
+
+jobs:
+  tick:
+    # リポジトリ変数 BTCSIM_PAUSED=true で一時停止できる
+    if: vars.BTCSIM_PAUSED != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # setup-python は使わない（ランナー同梱の Python 3.12 を使い、
+      # 依存インストールも無いので 1 回あたり十数秒で終わる＝無料枠の節約）
+      - name: Show Python version
+        run: python3 --version
+
+      - name: Run one simulation tick
+        id: tick
+        env:
+          PYTHONPATH: src
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python3 -m btcsim.run \
+            ${{ (inputs.report_only == true) && '--report-only' || '--git' }} \
+            ${{ (inputs.force == true) && '--force' || '' }} \
+            --verbose
+
+      - name: Summarize to job log
+        if: always()
+        run: |
+          echo "### 直近の実行結果" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/step_summary.py >> "$GITHUB_STEP_SUMMARY" || echo "- サマリー生成に失敗" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs/state on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btcsim-debug-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            state/
+            reports/
+            docs/data.json
+          retention-days: 7
+          if-no-files-found: ignore

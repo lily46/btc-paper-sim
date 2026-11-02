@@ -1,0 +1,64 @@
+{
+  "experiment": {
+    "initial_capital_jpy": "1000000",
+    "duration_hours": 168,
+    "timezone": "Asia/Tokyo",
+    "product_code": "BTC_JPY",
+    "tick_interval_minutes": 10
+  },
+  "fees": {
+    "taker_fee_rate": "0.0015",
+    "slippage_bps": "5"
+  },
+  "risk": {
+    "max_order_pct_of_initial": "0.20",
+    "max_btc_pct_of_equity": "0.80",
+    "max_drawdown_stop": "0.10",
+    "min_order_size_btc": "0.001",
+    "size_precision": 8,
+    "min_jpy_reserve": "0"
+  },
+  "sanity": {
+    "max_price_jump_pct": "0.15",
+    "min_price_jpy": "100000",
+    "max_price_jpy": "500000000",
+    "max_spread_pct": "0.01"
+  },
+  "data": {
+    "warmup_bootstrap": true,
+    "bootstrap_source": "bitbank",
+    "max_bars_kept": 1200,
+    "max_ticks_kept": 1200
+  },
+  "strategies": {
+    "A_ma_cross": {
+      "enabled": true,
+      "timeframe": "30m",
+      "short_window": 6,
+      "long_window": 24,
+      "order_pct": "0.20"
+    },
+    "B_rsi_reversal": {
+      "enabled": true,
+      "timeframe": "30m",
+      "rsi_period": 14,
+      "buy_below": "30",
+      "sell_above": "70",
+      "order_pct": "0.20"
+    },
+    "C_combo": {
+      "enabled": true,
+      "trend_timeframe": "1h",
+      "trend_ma_window": 24,
+      "entry_timeframe": "30m",
+      "rsi_period": 14,
+      "buy_below": "40",
+      "sell_above": "60",
+      "order_pct": "0.20"
+    },
+    "D_buy_and_hold": {
+      "enabled": true,
+      "allocation_pct": "1.00"
+    }
+  }
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BTC 仮想売買シミュレーター ダッシュボード</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#272b36; --fg:#e8eaf0; --muted:#98a0b0;
+    --pos:#35b37e; --neg:#e5484d; --accent:#5b8def;
+    --sA:#5b8def; --sB:#e8a33d; --sC:#9d7bea; --sD:#6c7686;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f7f8fa; --panel:#fff; --line:#e3e6ec; --fg:#15181f; --muted:#5c6473; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:14px/1.6 -apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+  h1{font-size:20px;margin:0 0 4px}
+  h2{font-size:15px;margin:28px 0 10px;color:var(--muted);font-weight:600;
+     letter-spacing:.04em;text-transform:uppercase}
+  .banner{background:#3a2a0b;border:1px solid #7a5a12;color:#ffd98a;
+    padding:10px 14px;border-radius:8px;margin:14px 0;font-weight:600}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 24px;color:var(--muted);margin-bottom:8px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .kv{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+  .kv span:first-child{color:var(--muted)}
+  .pos{color:var(--pos)} .neg{color:var(--neg)}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
+  .scroll{overflow:auto;max-height:420px;background:var(--panel);
+    border:1px solid var(--line);border-radius:10px}
+  svg{width:100%;height:260px;display:block}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);margin:6px 0 0}
+  .legend b{color:var(--fg);font-weight:600}
+  footer{color:var(--muted);margin-top:32px;font-size:12px}
+  code{background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bitcoin 自動売買シミュレーター</h1>
+  <div class="meta" id="meta"></div>
+  <div class="banner">⚠️ これは <strong>仮想売買（ペーパートレード）</strong> です。実際の注文・入出金・取引所口座への接続は一切行っていません。</div>
+
+  <h2>実験ステータス</h2>
+  <div class="grid" id="status"></div>
+
+  <h2>戦略別サマリー</h2>
+  <div class="grid" id="cards"></div>
+
+  <h2>BTC 価格推移（bitFlyer LTP）</h2>
+  <svg id="priceChart" role="img" aria-label="BTC価格推移"></svg>
+
+  <h2>戦略別 資産推移</h2>
+  <svg id="equityChart" role="img" aria-label="戦略別資産推移"></svg>
+  <div class="legend" id="equityLegend"></div>
+
+  <h2>戦略別 指標一覧</h2>
+  <div class="scroll"><table id="table"></table></div>
+
+  <h2>仮想売買履歴（新しい順・最大500件）</h2>
+  <div class="scroll"><table id="trades"></table></div>
+
+  <footer>
+    データ元: bitFlyer Public API（<code>/v1/getticker</code>, <code>/v1/getboard</code>,
+    <code>/v1/getexecutions</code>）。指標ウォームアップのみ bitbank 公開1分足を代理利用。
+    状態の正本は本リポジトリの <code>state/state.json</code>（Git コミット履歴が監査ログ）。
+    <span id="gen"></span>
+  </footer>
+</div>
+<script>
+const SC = {A_ma_cross:"var(--sA)", B_rsi_reversal:"var(--sB)", C_combo:"var(--sC)", D_buy_and_hold:"var(--sD)"};
+const LBL = {A_ma_cross:"A 移動平均クロス", B_rsi_reversal:"B RSI逆張り", C_combo:"C 複合", D_buy_and_hold:"D Buy & Hold"};
+const yen = n => (Number(n)).toLocaleString("ja-JP",{maximumFractionDigits:0});
+const sgn = n => Number(n) >= 0 ? "pos" : "neg";
+const el = (h) => { const t=document.createElement("template"); t.innerHTML=h.trim(); return t.content.firstChild; };
+
+function card(title, rows, color){
+  const dot = color ? `<span class="dot" style="background:${color}"></span>` : "";
+  return `<div class="card"><h3>${dot}${title}</h3>${rows}</div>`;
+}
+
+function lineChart(svgId, series, xs){
+  const svg = document.getElementById(svgId);
+  const W = svg.clientWidth || 900, H = 260, P = {t:12,r:12,b:22,l:64};
+  const all = series.flatMap(s => s.values).filter(v => Number.isFinite(v));
+  if(!all.length){ svg.innerHTML = `<text x="12" y="24" fill="currentColor">データがまだありません</text>`; return; }
+  let min = Math.min(...all), max = Math.max(...all);
+  if(min === max){ min -= 1; max += 1; }
+  const pad = (max-min)*0.08; min -= pad; max += pad;
+  const n = Math.max(1, xs.length - 1);
+  const X = i => P.l + (W-P.l-P.r) * (n ? i/n : 0);
+  const Y = v => P.t + (H-P.t-P.b) * (1 - (v-min)/(max-min));
+  let out = "";
+  for(let g=0; g<=4; g++){
+    const v = min + (max-min)*g/4, y = Y(v);
+    out += `<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="var(--line)"/>`
+         + `<text x="${P.l-8}" y="${y+4}" text-anchor="end" fill="var(--muted)" font-size="11">${yen(v)}</text>`;
+  }
+  for(const s of series){
+    const d = s.values.map((v,i) => `${i?"L":"M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+    out += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="1.8" stroke-linejoin="round"/>`;
+  }
+  if(xs.length){
+    out += `<text x="${P.l}" y="${H-6}" fill="var(--muted)" font-size="11">${xs[0]}</text>`
+         + `<text x="${W-P.r}" y="${H-6}" text-anchor="end" fill="var(--muted)" font-size="11">${xs[xs.length-1]}</text>`;
+  }
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = out;
+}
+
+function render(d){
+  const e = d.experiment, m = d.market;
+  document.getElementById("meta").innerHTML =
+    `<div>通貨ペア: <b>${e.product_code}</b></div><div>TZ: ${e.timezone}</div>
+     <div>ステータス: <b>${e.status}</b></div>`;
+  document.getElementById("gen").textContent = `生成: ${d.generated_at_utc} (UTC)`;
+
+  document.getElementById("status").innerHTML = [
+    card("実験期間", `<div class="kv"><span>開始</span><b>${e.started_at_jst ?? "-"}</b></div>
+      <div class="kv"><span>終了予定</span><b>${e.ends_at_jst ?? "-"}</b></div>
+      <div class="kv"><span>残り時間</span><b>${e.remaining_human ?? "-"}</b></div>
+      <div class="kv"><span>終了時刻</span><b>${e.finished_at_jst ?? "—"}</b></div>`),
+    card("市場データ", `<div class="big">¥${yen(m.ltp)}</div>
+      <div class="kv"><span>best_bid</span><b>¥${yen(m.best_bid)}</b></div>
+      <div class="kv"><span>best_ask</span><b>¥${yen(m.best_ask ?? 0)}</b></div>
+      <div class="kv"><span>開始比</span><b class="${sgn(m.price_change_pct)}">${m.price_change_pct ?? "-"} %</b></div>
+      <div class="kv"><span>最終取得</span><b>${m.last_fetch_jst ?? "-"}</b></div>`),
+    card("実行品質", `<div class="kv"><span>実行回数</span><b>${d.stats.runs ?? 0}</b></div>
+      <div class="kv"><span>処理ティック</span><b>${d.stats.observed_ticks ?? 0} / ${d.stats.expected_ticks ?? 0}</b></div>
+      <div class="kv"><span>実行漏れ</span><b>${d.stats.missed_schedules ?? 0}</b></div>
+      <div class="kv"><span>APIエラー</span><b>${d.stats.api_errors ?? 0}</b></div>
+      <div class="kv"><span>異常値スキップ</span><b>${d.stats.data_rejections ?? 0}</b></div>`),
+  ].join("");
+
+  const ids = Object.keys(d.strategies).sort();
+  document.getElementById("cards").innerHTML = ids.map(sid => {
+    const r = d.strategies[sid];
+    return card(LBL[sid] ?? sid, `
+      <div class="big ${sgn(r.total_pnl_jpy)}">¥${yen(r.equity_jpy)}</div>
+      <div class="kv"><span>損益</span><b class="${sgn(r.total_pnl_jpy)}">${Number(r.total_pnl_jpy)>=0?"+":""}${yen(r.total_pnl_jpy)} 円 (${r.total_pnl_pct}%)</b></div>
+      <div class="kv"><span>JPY残高</span><b>¥${yen(r.jpy_balance)}</b></div>
+      <div class="kv"><span>BTC保有</span><b>${Number(r.btc_balance).toFixed(8)}</b></div>
+      <div class="kv"><span>評価損益</span><b class="${sgn(r.unrealized_pnl_jpy)}">${yen(r.unrealized_pnl_jpy)} 円</b></div>
+      <div class="kv"><span>実現損益</span><b class="${sgn(r.realized_pnl_jpy)}">${yen(r.realized_pnl_jpy)} 円</b></div>
+      <div class="kv"><span>売買回数</span><b>${r.trades}</b></div>
+      <div class="kv"><span>累計手数料</span><b>¥${yen(r.fees_jpy)}</b></div>
+      <div class="kv"><span>最大DD</span><b>${r.max_drawdown_pct} %</b></div>
+      <div class="kv"><span>B&H差</span><b class="${sgn(r.vs_buy_and_hold_jpy ?? 0)}">${yen(r.vs_buy_and_hold_jpy ?? 0)} 円</b></div>
+      ${r.halted ? `<div class="kv"><span>停止</span><b class="neg">${r.halt_reason}</b></div>` : ""}
+    `, SC[sid]);
+  }).join("");
+
+  const xs = d.series.ts;
+  lineChart("priceChart", [{values:d.series.price, color:"var(--accent)"}], xs);
+  lineChart("equityChart", ids.map(sid => ({values:d.series.equity[sid] ?? [], color:SC[sid] ?? "var(--accent)"})), xs);
+  document.getElementById("equityLegend").innerHTML = ids.map(sid =>
+    `<div><span class="dot" style="background:${SC[sid]}"></span> <b>${LBL[sid] ?? sid}</b></div>`).join("");
+
+  const cols = [["strategy","戦略"],["equity_jpy","総資産"],["total_pnl_jpy","損益"],["total_pnl_pct","損益率%"],
+    ["jpy_balance","JPY"],["btc_balance","BTC"],["realized_pnl_jpy","実現"],["unrealized_pnl_jpy","評価"],
+    ["trades","回数"],["closed_trades","決済数"],["win_rate_pct","勝率%"],["fees_jpy","手数料"],
+    ["max_drawdown_pct","最大DD%"],["vs_buy_and_hold_jpy","B&H差"]];
+  document.getElementById("table").innerHTML =
+    `<thead><tr>${cols.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody>` +
+    ids.map(sid=>`<tr>${cols.map(c=>{
+      const v = d.strategies[sid][c[0]];
+      return `<td>${v===null||v===undefined?"-":(typeof v==="boolean"?v: (c[0]==="btc_balance"?Number(v).toFixed(8):(isNaN(Number(v))?v:(String(c[0]).includes("pct")?v:yen(v)))))}</td>`;
+    }).join("")}</tr>`).join("") + `</tbody>`;
+
+  const tcols = [["ts","時刻(JST)"],["strategy","戦略"],["side","売買"],["price","価格"],["size","数量"],
+    ["gross_jpy","約定金額"],["fee_jpy","手数料"],["realized_pnl","実現損益"],["jpy_after","JPY残高"],
+    ["btc_after","BTC残高"],["equity_after","総資産"],["reason","根拠"]];
+  const trades = (d.trades||[]).slice().reverse();
+  document.getElementById("trades").innerHTML =
+    `<thead><tr>${tcols.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody>` +
+    (trades.length ? trades.map(t=>`<tr>${tcols.map(c=>{
+      const v = t[c[0]];
+      if(c[0]==="side") return `<td class="${v==="BUY"?"pos":"neg"}"><b>${v}</b></td>`;
+      if(c[0]==="size"||c[0]==="btc_after") return `<td>${Number(v).toFixed(8)}</td>`;
+      if(c[0]==="ts"||c[0]==="strategy"||c[0]==="reason") return `<td>${v??""}</td>`;
+      return `<td>${yen(v)}</td>`;
+    }).join("")}</tr>`).join("") : `<tr><td colspan="${tcols.length}">まだ仮想売買は発生していません。</td></tr>`) + `</tbody>`;
+}
+
+fetch("data.json?_=" + Date.now())
+  .then(r => { if(!r.ok) throw new Error("data.json が見つかりません（まだ1回も実行されていない可能性）"); return r.json(); })
+  .then(render)
+  .catch(err => { document.getElementById("status").innerHTML =
+    `<div class="card"><h3>読み込みエラー</h3><div>${err.message}</div></div>`; });
+</script>
+</body>
+</html>
