@@ -38,7 +38,9 @@ jobs:
     # リポジトリ変数 BTCSIM_PAUSED=true で一時停止できる
     if: vars.BTCSIM_PAUSED != 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    # 実際の稼働時間は --loop-minutes が決める。長時間ループを手動起動
+    # できるよう上限だけ広く取る（GitHub のジョブ上限は 6 時間）。
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
         with:
