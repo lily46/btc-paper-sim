@@ -1,6 +1,6 @@
 {
  "disclaimer": "これは仮想売買（ペーパートレード）の記録です。実際の注文・入出金は一切行っていません。",
- "generated_at_utc": "2026-11-02T14:20:03+00:00",
+ "generated_at_utc": "2026-11-02T14:30:03+00:00",
  "paper_trading_only": true,
  "experiment": {
   "started_at_jst": "2026-11-02T22:21:20+09:00",
@@ -10,16 +10,16 @@
   "timezone": "Asia/Tokyo",
   "product_code": "BTC_JPY",
   "initial_capital_jpy": "1000000",
-  "remaining_seconds": 601277,
-  "remaining_human": "6日 23時間 1分"
+  "remaining_seconds": 600677,
+  "remaining_human": "6日 22時間 51分"
  },
  "market": {
-  "last_fetch_jst": "2026-11-02T23:20:02+09:00",
-  "ltp": "12287493.0",
-  "best_bid": "12282757.0",
-  "best_ask": "12286084.0",
+  "last_fetch_jst": "2026-11-02T23:30:02+09:00",
+  "ltp": "12250000.0",
+  "best_bid": "12250000.0",
+  "best_ask": "12257447.0",
   "start_price": "12242596.0",
-  "price_change_pct": "0.3667",
+  "price_change_pct": "0.0605",
   "source": "bitFlyer Public API (/v1/getticker, /v1/getboard, /v1/getexecutions)"
  },
  "strategies": {
@@ -43,7 +43,7 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
-   "vs_buy_and_hold_jpy": "-874.0573"
+   "vs_buy_and_hold_jpy": "1795.1829"
   },
   "B_rsi_reversal": {
    "strategy": "B_rsi_reversal",
@@ -65,7 +65,7 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
-   "vs_buy_and_hold_jpy": "-874.0573"
+   "vs_buy_and_hold_jpy": "1795.1829"
   },
   "C_combo": {
    "strategy": "C_combo",
@@ -87,24 +87,24 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
-   "vs_buy_and_hold_jpy": "-874.0573"
+   "vs_buy_and_hold_jpy": "1795.1829"
   },
   "D_buy_and_hold": {
    "strategy": "D_buy_and_hold",
-   "equity_jpy": "1000874.0573",
+   "equity_jpy": "998204.8171",
    "jpy_balance": "0.0921",
    "btc_balance": "0.08148610",
-   "btc_value_jpy": "1000873.9652",
+   "btc_value_jpy": "998204.7250",
    "avg_cost_jpy": "12272030.5414",
-   "unrealized_pnl_jpy": "874.0573",
+   "unrealized_pnl_jpy": "-1795.1829",
    "realized_pnl_jpy": "0.0000",
-   "total_pnl_jpy": "874.0573",
-   "total_pnl_pct": "0.0874",
+   "total_pnl_jpy": "-1795.1829",
+   "total_pnl_pct": "-0.1795",
    "trades": 1,
    "buys": 1,
    "sells": 0,
    "fees_jpy": "1497.7532",
-   "max_drawdown_pct": "0.0000",
+   "max_drawdown_pct": "0.2667",
    "win_rate_pct": null,
    "closed_trades": 0,
    "halted": false,
@@ -113,32 +113,32 @@
   }
  },
  "stats": {
-  "runs": 3,
+  "runs": 4,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 0,
   "missed_schedules": 3,
-  "expected_ticks": 6,
-  "observed_ticks": 3
+  "expected_ticks": 7,
+  "observed_ticks": 4
  },
  "last_run": {
-  "tick_id": "1793629200",
-  "at_jst": "2026-11-02T23:20:02+09:00",
+  "tick_id": "1793629800",
+  "at_jst": "2026-11-02T23:30:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
     "action": "HOLD",
-    "reason": "no cross (short=12280566, long=12325420)",
+    "reason": "no cross (short=12275891, long=12320595)",
     "executed": false
    },
    "B_rsi_reversal": {
     "action": "HOLD",
-    "reason": "RSI=46.48 (no crossing)",
+    "reason": "RSI=40.73 (no crossing)",
     "executed": false
    },
    "C_combo": {
     "action": "HOLD",
-    "reason": "trend=down, RSI=46.48",
+    "reason": "trend=down, RSI=40.73",
     "executed": false
    },
    "D_buy_and_hold": {
@@ -153,15 +153,18 @@
   "ts": [
    "2026-11-02T22:21:20+09:00",
    "2026-11-02T23:18:27+09:00",
-   "2026-11-02T23:20:02+09:00"
+   "2026-11-02T23:20:02+09:00",
+   "2026-11-02T23:30:02+09:00"
   ],
   "price": [
    12242596.0,
    12284571.0,
-   12287493.0
+   12287493.0,
+   12250000.0
   ],
   "equity": {
    "A_ma_cross": [
+    1000000.0,
     1000000.0,
     1000000.0,
     1000000.0
@@ -169,9 +172,11 @@
    "B_rsi_reversal": [
     1000000.0,
     1000000.0,
+    1000000.0,
     1000000.0
    ],
    "C_combo": [
+    1000000.0,
     1000000.0,
     1000000.0,
     1000000.0
@@ -179,7 +184,8 @@
    "D_buy_and_hold": [
     997689.7435,
     1000823.21,
-    1000874.0573
+    1000874.0573,
+    998204.8171
    ]
   }
  },
