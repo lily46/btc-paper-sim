@@ -24,6 +24,10 @@ on:
         description: "常駐してティックを処理する分数（0 = 1 ティックで終了）"
         type: string
         default: ""
+      chain_now:
+        description: "短時間ジョブでも連鎖を実行する（連鎖の動作確認用）"
+        type: boolean
+        default: false
 
 # 同時実行防止（前の実行を取り消さずに直列化する）
 concurrency:
@@ -51,6 +55,20 @@ jobs:
       - name: Show Python version
         run: python3 --version
 
+      # このジョブが何分常駐するかを 1 箇所で決める（後続ステップでも参照する）
+      - name: Resolve loop minutes
+        id: loop
+        run: |
+          if [ -n "${{ inputs.loop_minutes }}" ]; then
+            m="${{ inputs.loop_minutes }}"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            m=25
+          else
+            m=0
+          fi
+          echo "minutes=$m" >> "$GITHUB_OUTPUT"
+          echo "このジョブは ${m} 分ループします（0 = 1 ティックで終了）"
+
       - name: Run one simulation tick
         id: tick
         env:
@@ -60,7 +78,7 @@ jobs:
           python3 -m btcsim.run \
             ${{ (inputs.report_only == true) && '--report-only' || '--git' }} \
             ${{ (inputs.force == true) && '--force' || '' }} \
-            --loop-minutes "${{ inputs.loop_minutes != '' && inputs.loop_minutes || (github.event_name == 'schedule' && '25' || '0') }}" \
+            --loop-minutes "${{ steps.loop.outputs.minutes }}" \
             --verbose
 
       - name: Summarize to job log
@@ -68,6 +86,31 @@ jobs:
         run: |
           echo "### 直近の実行結果" >> "$GITHUB_STEP_SUMMARY"
           python3 scripts/step_summary.py >> "$GITHUB_STEP_SUMMARY" || echo "- サマリー生成に失敗" >> "$GITHUB_STEP_SUMMARY"
+
+      # GitHub のスケジューラは実測で 1 時間以上発火しないことがあったため、
+      # 長時間ループ（>= 300 分）のジョブは終了直前に自分で次のジョブを起動して
+      # 連鎖させる。cron はあくまで保険として残している。
+      # GITHUB_TOKEN では workflow_dispatch を起動できない仕様なので、
+      # workflow スコープを持つ別トークンを Secret CHAIN_TOKEN に入れて使う。
+      - name: Chain the next long run
+        if: always() && (fromJSON(steps.loop.outputs.minutes) >= 300 || inputs.chain_now == true)
+        env:
+          GH_TOKEN: ${{ secrets.CHAIN_TOKEN }}
+          # 連鎖で起動する次のジョブは常にこの長さにする
+          # （動作確認用の短時間ジョブが短いジョブを無限に生むのを防ぐ）
+          CHAIN_MINUTES: "330"
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::CHAIN_TOKEN が未設定のため連鎖しません（cron 任せになります）"
+            exit 0
+          fi
+          status=$(python3 -c "import json;print((json.load(open('state/state.json'))['experiment'] or {}).get('status',''))" 2>/dev/null || echo "")
+          if [ "$status" = "finished" ]; then
+            echo "実験は終了済みなので連鎖しません。"
+            exit 0
+          fi
+          echo "次の ${CHAIN_MINUTES} 分ジョブを起動します。"
+          gh workflow run simulate.yml --repo "$GITHUB_REPOSITORY" -f loop_minutes="$CHAIN_MINUTES"
 
       - name: Upload logs/state on failure
         if: failure()
