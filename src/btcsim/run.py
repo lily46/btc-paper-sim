@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -302,13 +303,61 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
     return 0
 
 
+def loop_ticks(root: Path, cfg: Config, minutes: int, *, force: bool = False,
+               no_git: bool = True, sleeper=time.sleep) -> int:
+    """1 回の起動で複数ティックを処理する（GitHub の cron 欠落対策）。
+
+    GitHub Actions のスケジュールは遅延・欠落するため、10 分ごとの発火に 1:1 で
+    依存すると取りこぼしが増える。1 プロセスを `minutes` 分だけ生かし、10 分の
+    境界ごとにティックを処理することで、必要な cron 発火回数を減らす。
+    冪等性チェックが効くので、別実行と重なってもティックは二重処理されない。
+    """
+    interval = int(cfg["experiment"]["tick_interval_minutes"]) * 60
+    deadline = time.time() + minutes * 60
+    worst = 0
+    processed = 0
+    while True:
+        try:
+            rc = process_tick(root, cfg, force=force and processed == 0, no_git=no_git)
+        except StoreError as exc:                   # push 失敗など。次のティックは試す
+            log.error("ティック処理に失敗: %s", exc)
+            rc = 3
+        except Exception:                           # noqa: BLE001
+            log.exception("ティック処理で予期しないエラー")
+            rc = 1
+        worst = max(worst, rc)
+        processed += 1
+
+        store = Store(root)
+        try:
+            exp = store.load().get("experiment") or {}
+        except StoreError:
+            exp = {}
+        if exp.get("status") == "finished":
+            log.info("実験が終了したのでループを抜けます。")
+            break
+
+        next_ts = (int(time.time()) // interval + 1) * interval
+        if next_ts >= deadline:
+            log.info("ループ終了（%d ティック処理 / 次のティックは次回起動に任せる）", processed)
+            break
+        wait = max(1, next_ts - int(time.time()) + 2)   # 境界を 2 秒過ぎてから取得
+        log.info("次のティックまで %d 秒待機（ループ残り %d 秒）",
+                 wait, int(deadline - time.time()))
+        sleeper(wait)
+    return worst
+
+
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Bitcoin 仮想売買シミュレーター（1 ティック実行）")
+    ap = argparse.ArgumentParser(description="Bitcoin 仮想売買シミュレーター")
     ap.add_argument("--root", default=str(Path(__file__).resolve().parents[2]))
     ap.add_argument("--config", default=None)
     ap.add_argument("--force", action="store_true", help="冪等チェックを無視して実行（検証用）")
     ap.add_argument("--git", action="store_true", help="結果を git commit/push する")
     ap.add_argument("--report-only", action="store_true", help="売買せずレポート/ダッシュボードのみ再生成")
+    ap.add_argument("--loop-minutes", type=int, default=0,
+                    help="1 回の起動でこの分数だけ常駐し、10 分境界ごとにティックを処理する"
+                         "（既定 0 = 1 ティックで終了）")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)
 
@@ -327,6 +376,10 @@ def main(argv: list[str] | None = None) -> int:
         dashboard.build(root, store.state, cfg)
         store.export_csv()
         return 0
+
+    if args.loop_minutes > 0:
+        return loop_ticks(root, cfg, args.loop_minutes,
+                          force=args.force, no_git=not args.git)
 
     try:
         return process_tick(root, cfg, force=args.force, no_git=not args.git)

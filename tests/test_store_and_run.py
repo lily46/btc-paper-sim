@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -290,7 +291,7 @@ def test_standalone_report_html_is_self_contained(tmp_path, cfg_nb, fake_market)
     # 埋め込み JSON を取り出して壊れていないか検証
     start = html.index("/*__EMBEDDED_DATA__*/") + len("/*__EMBEDDED_DATA__*/")
     end = html.index("/*__END_EMBEDDED_DATA__*/")
-    data = json.loads(html[start:end].strip().replace("<\/", "</"))
+    data = json.loads(html[start:end].strip().replace(r"<\/", "</"))
     assert data["strategies"]["D_buy_and_hold"]["trades"] == 1
     # 認証情報が混入していないこと
     low = html.lower()
@@ -306,3 +307,61 @@ def test_final_report_includes_html(tmp_path, cfg_nb, fake_market):
     assert paths["html"] is not None and paths["html"].exists()
     html = paths["html"].read_text(encoding="utf-8")
     assert "const EMBEDDED =" in html and '"D_buy_and_hold"' in html
+
+
+def test_loop_processes_multiple_ticks(tmp_path, cfg_nb, fake_market, monkeypatch):
+    """1 起動で 10 分境界ごとに複数ティックを処理すること（cron 欠落対策）。"""
+    clock = {"t": 1_800_000_000.0}          # 10 分境界ぴったり
+    slept: list[int] = []
+
+    monkeypatch.setattr("time.time", lambda: clock["t"])
+    monkeypatch.setattr("btcsim.run.datetime", _FrozenDatetime(clock))
+
+    def sleeper(sec):
+        slept.append(sec)
+        clock["t"] += sec
+
+    rc = run.loop_ticks(tmp_path, cfg_nb, minutes=25, sleeper=sleeper)
+    assert rc == 0
+    st = json.loads((tmp_path / "state" / "state.json").read_text(encoding="utf-8"))
+    # 0 分 / 10 分 / 20 分 の 3 ティック（30 分目は 25 分の枠を超えるので次回起動に任せる）
+    assert len(st["ticks"]) == 3
+    assert st["stats"]["observed_ticks"] == 3
+    assert len(set(st["processed_tick_ids"])) == 3
+    assert len(slept) == 2 and all(590 <= s <= 610 for s in slept)
+    # 重複ティックは発生していない
+    assert st["stats"]["skipped_duplicate_ticks"] == 0
+    assert st["portfolios"]["D_buy_and_hold"]["buys"] == 1    # B&H は 1 回だけ
+
+
+def test_loop_stops_when_experiment_finished(tmp_path, cfg_nb, fake_market, monkeypatch):
+    clock = {"t": 1_800_000_000.0}
+    monkeypatch.setattr("time.time", lambda: clock["t"])
+    monkeypatch.setattr("btcsim.run.datetime", _FrozenDatetime(clock))
+    run.process_tick(tmp_path, cfg_nb)
+    st_path = tmp_path / "state" / "state.json"
+    st = json.loads(st_path.read_text(encoding="utf-8"))
+    st["experiment"]["ends_ts"] = 1
+    st_path.write_text(json.dumps(st), encoding="utf-8")
+
+    slept = []
+    rc = run.loop_ticks(tmp_path, cfg_nb, minutes=60, force=True, sleeper=slept.append)
+    assert rc == 0
+    assert slept == []                       # 終了を検知して即ループを抜ける
+    assert json.loads(st_path.read_text(encoding="utf-8"))["experiment"]["status"] == "finished"
+
+
+class _FrozenDatetime:
+    """time.time() に追従する datetime.now() を提供するテスト用スタブ。"""
+
+    def __init__(self, clock):
+        self._clock = clock
+
+    def now(self, tz=None):
+        return datetime.fromtimestamp(self._clock["t"], tz)
+
+    def fromtimestamp(self, *a, **k):
+        return datetime.fromtimestamp(*a, **k)
+
+    def fromisoformat(self, *a, **k):
+        return datetime.fromisoformat(*a, **k)
