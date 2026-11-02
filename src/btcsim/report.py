@@ -1,13 +1,15 @@
-"""最終レポートを Markdown / JSON / CSV で出力する。"""
+"""最終レポートを Markdown / JSON / CSV / HTML で出力する。"""
 from __future__ import annotations
 
 import csv
 import json
+import shutil
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from . import dashboard
 from .metrics import summarize
 
 COLUMNS = [
@@ -36,7 +38,17 @@ def build(root: Path | str, state: dict[str, Any], cfg: dict) -> dict[str, Path]
 
     md_path = out_dir / "final_report.md"
     md_path.write_text(_markdown(summary, state), encoding="utf-8")
-    return {"json": json_path, "csv": csv_path, "md": md_path}
+
+    # HTML 版（データ埋め込み済みの単体ファイル。file:// で直接開ける固定スナップショット）
+    dashboard.build(root, state, cfg)
+    html_src = root / "docs" / "report.html"
+    html_path = out_dir / "final_report.html"
+    if html_src.exists():
+        shutil.copyfile(html_src, html_path)
+    else:
+        html_path = None
+
+    return {"json": json_path, "csv": csv_path, "md": md_path, "html": html_path}
 
 
 def _markdown(s: dict[str, Any], state: dict[str, Any]) -> str:

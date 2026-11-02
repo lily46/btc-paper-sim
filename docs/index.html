@@ -191,8 +191,14 @@ function render(d){
     }).join("")}</tr>`).join("") : `<tr><td colspan="${tcols.length}">まだ仮想売買は発生していません。</td></tr>`) + `</tbody>`;
 }
 
-fetch("data.json?_=" + Date.now())
-  .then(r => { if(!r.ok) throw new Error("data.json が見つかりません（まだ1回も実行されていない可能性）"); return r.json(); })
+// 単体HTML (docs/report.html) ではここにデータが埋め込まれる。
+// file:// で開くと fetch がブロックされるため、ローカル閲覧は report.html を使う。
+const EMBEDDED = /*__EMBEDDED_DATA__*/ null /*__END_EMBEDDED_DATA__*/;
+
+(EMBEDDED
+  ? Promise.resolve(EMBEDDED)
+  : fetch("data.json?_=" + Date.now())
+      .then(r => { if(!r.ok) throw new Error("data.json が見つかりません（まだ1回も実行されていない可能性）"); return r.json(); }))
   .then(render)
   .catch(err => { document.getElementById("status").innerHTML =
     `<div class="card"><h3>読み込みエラー</h3><div>${err.message}</div></div>`; });

@@ -21,7 +21,7 @@ GitHub Actions (cron */10)
        ├─ 30分足・1時間足を更新（確定足のみ指標に使用＝ルックアヘッド禁止）
        ├─ 4 戦略のシグナル判定 → 仮想売買（Decimal 計算）
        ├─ state/state.json を原子的に更新 → git commit & push（= 正本データ）
-       └─ docs/data.json を再生成 → GitHub Pages のダッシュボードが即反映
+       └─ docs/data.json と docs/report.html（単体HTML）を再生成
 ```
 
 | ファイル | 役割 |
@@ -34,10 +34,11 @@ GitHub Actions (cron */10)
 | `src/btcsim/store.py` | 永続化（JSON + CSV を git にコミット）・冪等性 |
 | `src/btcsim/run.py` | 1 ティックのオーケストレーション（エントリポイント） |
 | `src/btcsim/metrics.py` | 集計（ダッシュボードとレポートで共通） |
-| `src/btcsim/dashboard.py` | `docs/data.json` 生成 |
-| `src/btcsim/report.py` | 最終レポート（Markdown / JSON / CSV） |
+| `src/btcsim/dashboard.py` | `docs/data.json` と `docs/report.html`（単体HTML）生成 |
+| `src/btcsim/report.py` | 最終レポート（Markdown / JSON / CSV / HTML） |
 | `config.json` | すべてのパラメータ（戦略・手数料・リスク管理・異常値判定） |
-| `docs/index.html` | 静的ダッシュボード（GitHub Pages） |
+| `docs/index.html` | ダッシュボード UI（テンプレート兼 Web サーバー用） |
+| `docs/report.html` | **自動生成**：データ埋め込み済みの単体 HTML（ローカル閲覧用） |
 
 - Python **3.12 以降**。**実行時の依存ライブラリはゼロ**（標準ライブラリのみ）。
   これにより Actions 1 回あたりの実行時間は 10 秒前後で、無料枠をほとんど消費しません。
@@ -137,21 +138,23 @@ Git で十分です。外部サービスの認証情報が一切不要になる�
 - 状態の読み込み・保存に失敗した場合は売買を中止（終了コード 2）
 
 正本: `state/state.json`。派生物: `state/trades.csv`, `state/market.csv`, `docs/data.json`,
-`reports/final_report.*`。
+`docs/report.html`, `reports/final_report.*`。
 
 ---
 
 ## 5. セットアップ手順（ユーザー作業）
 
-### 5.1 リポジトリに配置して push
+### 5.1 リポジトリ（設定済み）
+
+本プロジェクトは **private リポジトリ `lily46/btc-paper-sim`** にセットアップ済みです。
+新しく別のリポジトリに置く場合:
 
 ```bash
 cd btc-sim
 git init -b main
 git add .
 git commit -m "Add bitcoin paper-trading simulator"
-git remote add origin https://github.com/<ユーザー名>/<リポジトリ名>.git
-git push -u origin main
+gh repo create <リポジトリ名> --private --source=. --remote=origin --push
 ```
 
 > 既存リポジトリに入れる場合は、このディレクトリの中身をリポジトリ直下にコピーしてください
@@ -163,10 +166,11 @@ git push -u origin main
 取引所の認証情報を使わず、永続化も同じリポジトリへの commit で行うため、
 Actions が自動で発行する `GITHUB_TOKEN` だけで完結します。
 
-ただし **Workflow の書き込み権限**だけは有効化が必要です（ユーザー作業）:
+ただし **Workflow の書き込み権限**だけは有効化が必要です（本リポジトリでは設定済み）:
 
 1. GitHub のリポジトリ → **Settings → Actions → General**
 2. **Workflow permissions** を **Read and write permissions** に変更して Save
+   （CLI なら `gh api --method PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=write`）
 
 （Workflow 側でも `permissions: contents: write` を宣言済みです。）
 
@@ -183,13 +187,29 @@ Actions が自動で発行する `GITHUB_TOKEN` だけで完結します。
 `dashboard.py` は公開して問題のない設定のみをホワイトリストで出力しています。
 </details>
 
-### 5.3 GitHub Pages（ダッシュボード公開）
+### 5.3 ダッシュボードの閲覧（private リポジトリ運用）
 
-1. **Settings → Pages**
-2. **Source** = `Deploy from a branch`
-3. **Branch** = `main` / フォルダ = **`/docs`** → Save
-4. 数分後に `https://<ユーザー名>.github.io/<リポジトリ名>/` で閲覧可能
-   （最初のティックが走るまでは「data.json が見つかりません」と表示されます）
+private リポジトリでは GitHub Pages が使えません（GitHub Pro 以上が必要）。
+そのため **データ埋め込み済みの単体 HTML** を毎ティック生成しています。
+
+```bash
+cd btc-sim
+git pull                 # 最新の状態を取得
+start docs/report.html   # Windows（mac は open、Linux は xdg-open）
+```
+
+- `docs/report.html` … **ダブルクリックで開ける自己完結 HTML**（ダッシュボード本体）。
+  ネットワーク通信をしないため `file://` でもグラフ・表がすべて表示されます。
+- `docs/index.html` + `docs/data.json` … Pages / Web サーバー用（将来 public 化や
+  GitHub Pro にした場合はこちらをそのまま公開できます）。UI はこの 1 ファイルが
+  テンプレートで、`report.html` はこれにデータを埋め込んで生成されます。
+
+> `file://` で `index.html` を開いても動きません（ブラウザが `fetch("data.json")` を
+> ブロックするため）。ローカル閲覧には必ず `report.html` を使ってください。
+> Web サーバー経由で見たい場合は `cd docs && python -m http.server` → `localhost:8000`。
+
+将来 public 化して Pages で公開する場合: Settings → Pages → Source = `Deploy from a branch`
+→ Branch = `main` / フォルダ = `/docs`。
 
 ### 5.4 Actions の有効化
 
@@ -225,19 +245,25 @@ PYTHONPATH=src python -m btcsim.run --root /tmp/btcsim-local --report-only # 集
 
 ## 7. 結果の確認
 
-- **ダッシュボード**: `https://<ユーザー名>.github.io/<リポジトリ名>/`
-  実験開始/終了予定時刻・残り時間・最終取得時刻・各戦略の総資産 / JPY 残高 / BTC 保有量 /
-  評価損益 / 実現損益 / 売買回数 / 累計手数料 / 最大ドローダウン・BTC 価格推移・
-  戦略別資産推移・売買履歴・Buy & Hold との差を表示します（仮想売買であることを明記）。
-- **Actions のジョブサマリー**: 各実行の判断理由（なぜ買わなかったか）まで表示されます。
-- **生データ**: `state/state.json`（正本）、`state/trades.csv`、`state/market.csv`
+| 見るもの | 場所 |
+|---|---|
+| **ダッシュボード（推奨）** | `git pull` して `docs/report.html` をダブルクリック |
+| 各実行の判断理由つきサマリー | GitHub の **Actions → 各実行 → Summary**（なぜ買わなかったかまで表示） |
+| 最終レポート | `reports/final_report.html` / `.md` / `.json` / `.csv` |
+| 生データ（正本） | `state/state.json`、派生: `state/trades.csv`, `state/market.csv` |
+
+`docs/report.html` の表示項目: 実験開始/終了予定時刻・残り時間・最終データ取得時刻・
+各戦略の総資産 / JPY 残高 / BTC 保有量 / 評価損益 / 実現損益 / 売買回数 / 累計手数料 /
+最大ドローダウン・BTC 価格推移・戦略別資産推移・売買履歴・Buy & Hold との差。
+冒頭に「仮想売買である」ことを常時表示します。
 
 ## 8. 7 日後の集計方法
 
 168 時間が経過すると、**次のティックで自動的に**以下が実行されます（手動操作は不要）:
 
 1. `experiment.status` を `finished` に変更 → **以降は新規の仮想売買を行わない**
-2. `reports/final_report.md` / `.json` / `.csv` を生成して commit
+2. `reports/final_report.html` / `.md` / `.json` / `.csv` を生成して commit
+   （HTML 版は終了時点の固定スナップショット。`docs/report.html` は常に最新を表示）
 3. ダッシュボードが「終了」表示に切り替わる
 4. 以降の cron 実行は、市場データ取得も売買もせず**数秒で終了**（無料枠の無駄打ちを回避）
 5. 終了後に勝手に再スタートすることはありません（`status: finished` が残り続けます）
@@ -274,7 +300,7 @@ PYTHONPATH=src python -m pytest -q      # 50 件
 - 状態のロールバック・破損 JSON / スキーマ不一致で取引中止・**同一ティック再実行で二重売買しない**
 - 再開時に初期資金と開始時刻を再設定しない、実験終了後に再スタートしない
 - API エラー時・異常値検出時に売買しない
-- レポート 3 形式の生成、ダッシュボードの表示項目契約、**公開物に認証情報が無いこと**
+- レポート 4 形式（md/json/csv/html）の生成、単体 HTML がデータ埋め込み済みであること、ダッシュボードの表示項目契約、**公開物に認証情報が無いこと**
 - **ソース内に実注文系エンドポイントが存在しないこと**
 
 ---

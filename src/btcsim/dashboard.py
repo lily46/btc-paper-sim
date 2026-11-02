@@ -1,6 +1,7 @@
-"""GitHub Pages 用の静的ダッシュボードデータ（docs/data.json）を生成する。
+"""ダッシュボードの生成。
 
-docs/index.html は静的ファイルで、この data.json を fetch して描画する。
+- `docs/data.json`  … Web サーバー / GitHub Pages 用（docs/index.html が fetch する）
+- `docs/report.html` … データ埋め込み済みの単体 HTML（file:// でそのまま開ける）
 APIキー・接続文字列・認証情報は一切含めない（そもそも保持していない）。
 """
 from __future__ import annotations
@@ -9,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .config import ROOT as CONFIG_ROOT
 from .metrics import summarize
 
 MAX_POINTS = 1200
@@ -38,6 +40,36 @@ def build(root: Path | str, state: dict[str, Any], cfg: dict) -> Path:
     }
     out = docs / "data.json"
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+    build_standalone(docs, payload)
+    return out
+
+
+MARKER_START = "/*__EMBEDDED_DATA__*/"
+MARKER_END = "/*__END_EMBEDDED_DATA__*/"
+
+
+def build_standalone(docs: Path, payload: dict[str, Any], out: Path | None = None) -> Path | None:
+    """docs/report.html（データ埋め込み済みの単体HTML）を生成する。
+
+    file:// で開いた HTML は fetch("data.json") をブラウザにブロックされるため、
+    ローカルで `git pull` して直接ダブルクリックで見るにはこの形式が必要。
+    テンプレートは docs/index.html を再利用し、UI の定義を一箇所に保つ。
+    """
+    template = docs / "index.html"
+    if not template.exists():                      # --root を別ディレクトリにした場合
+        template = CONFIG_ROOT / "docs" / "index.html"
+    if not template.exists():
+        return None
+    html = template.read_text(encoding="utf-8")
+    if MARKER_START not in html or MARKER_END not in html:
+        return None
+    head, rest = html.split(MARKER_START, 1)
+    _, tail = rest.split(MARKER_END, 1)
+    # </script> がデータ中に現れても壊れないようエスケープする
+    embedded = json.dumps(payload, ensure_ascii=False, default=str).replace("</", "<\\/")
+    out = out or (docs / "report.html")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(head + MARKER_START + " " + embedded + " " + MARKER_END + tail, encoding="utf-8")
     return out
 
 

@@ -277,3 +277,32 @@ def test_git_sync_raises_when_push_fails(tmp_path, monkeypatch):
     monkeypatch.setattr("time.sleep", lambda *_: None)
     with pytest.raises(GitSyncError):
         s.git_sync("msg", attempts=2)
+
+
+def test_standalone_report_html_is_self_contained(tmp_path, cfg_nb, fake_market):
+    """docs/report.html がデータ埋め込み済みで、file:// でも開けること。"""
+    run.process_tick(tmp_path, cfg_nb)
+    html = (tmp_path / "docs" / "report.html").read_text(encoding="utf-8")
+    assert "const EMBEDDED =" in html
+    assert '"D_buy_and_hold"' in html          # データが埋め込まれている
+    assert "const EMBEDDED = /*__EMBEDDED_DATA__*/ null" not in html
+    assert "仮想売買" in html
+    # 埋め込み JSON を取り出して壊れていないか検証
+    start = html.index("/*__EMBEDDED_DATA__*/") + len("/*__EMBEDDED_DATA__*/")
+    end = html.index("/*__END_EMBEDDED_DATA__*/")
+    data = json.loads(html[start:end].strip().replace("<\/", "</"))
+    assert data["strategies"]["D_buy_and_hold"]["trades"] == 1
+    # 認証情報が混入していないこと
+    low = html.lower()
+    for bad in ("api_key", "apikey", "secret", "postgres://", "password"):
+        assert bad not in low
+
+
+def test_final_report_includes_html(tmp_path, cfg_nb, fake_market):
+    run.process_tick(tmp_path, cfg_nb)
+    s = Store(tmp_path)
+    s.load()
+    paths = report.build(tmp_path, s.state, cfg_nb)
+    assert paths["html"] is not None and paths["html"].exists()
+    html = paths["html"].read_text(encoding="utf-8")
+    assert "const EMBEDDED =" in html and '"D_buy_and_hold"' in html
