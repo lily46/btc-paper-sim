@@ -1,6 +1,6 @@
 {
  "disclaimer": "これは仮想売買（ペーパートレード）の記録です。実際の注文・入出金は一切行っていません。",
- "generated_at_utc": "2026-11-02T20:40:02+00:00",
+ "generated_at_utc": "2026-11-02T20:50:03+00:00",
  "paper_trading_only": true,
  "experiment": {
   "started_at_jst": "2026-11-02T22:21:20+09:00",
@@ -10,16 +10,16 @@
   "timezone": "Asia/Tokyo",
   "product_code": "BTC_JPY",
   "initial_capital_jpy": "1000000",
-  "remaining_seconds": 578478,
-  "remaining_human": "6日 16時間 41分"
+  "remaining_seconds": 577877,
+  "remaining_human": "6日 16時間 31分"
  },
  "market": {
-  "last_fetch_jst": "2026-11-03T05:40:02+09:00",
-  "ltp": "12124735.0",
-  "best_bid": "12122082.0",
-  "best_ask": "12125681.0",
+  "last_fetch_jst": "2026-11-03T05:50:02+09:00",
+  "ltp": "12145267.0",
+  "best_bid": "12141467.0",
+  "best_ask": "12145134.0",
   "start_price": "12242596.0",
-  "price_change_pct": "-0.9627",
+  "price_change_pct": "-0.7950",
   "source": "bitFlyer Public API (/v1/getticker, /v1/getboard, /v1/getexecutions)"
  },
  "strategies": {
@@ -43,7 +43,7 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
-   "vs_buy_and_hold_jpy": "12218.7218"
+   "vs_buy_and_hold_jpy": "10639.1138"
   },
   "B_rsi_reversal": {
    "strategy": "B_rsi_reversal",
@@ -65,7 +65,7 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
-   "vs_buy_and_hold_jpy": "12218.7218"
+   "vs_buy_and_hold_jpy": "10639.1138"
   },
   "C_combo": {
    "strategy": "C_combo",
@@ -87,19 +87,19 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
-   "vs_buy_and_hold_jpy": "12218.7218"
+   "vs_buy_and_hold_jpy": "10639.1138"
   },
   "D_buy_and_hold": {
    "strategy": "D_buy_and_hold",
-   "equity_jpy": "987781.2782",
+   "equity_jpy": "989360.8862",
    "jpy_balance": "0.0921",
    "btc_balance": "0.08148610",
-   "btc_value_jpy": "987781.1861",
+   "btc_value_jpy": "989360.7941",
    "avg_cost_jpy": "12272030.5414",
-   "unrealized_pnl_jpy": "-12218.7218",
+   "unrealized_pnl_jpy": "-10639.1138",
    "realized_pnl_jpy": "0.0000",
-   "total_pnl_jpy": "-12218.7218",
-   "total_pnl_pct": "-1.2219",
+   "total_pnl_jpy": "-10639.1138",
+   "total_pnl_pct": "-1.0639",
    "trades": 1,
    "buys": 1,
    "sells": 0,
@@ -113,17 +113,17 @@
   }
  },
  "stats": {
-  "runs": 44,
+  "runs": 45,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 3,
   "missed_schedules": 3,
-  "expected_ticks": 44,
-  "observed_ticks": 41
+  "expected_ticks": 45,
+  "observed_ticks": 42
  },
  "last_run": {
-  "tick_id": "1793652000",
-  "at_jst": "2026-11-03T05:40:02+09:00",
+  "tick_id": "1793652600",
+  "at_jst": "2026-11-03T05:50:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
@@ -191,7 +191,8 @@
    "2026-11-03T05:10:02+09:00",
    "2026-11-03T05:20:02+09:00",
    "2026-11-03T05:30:02+09:00",
-   "2026-11-03T05:40:02+09:00"
+   "2026-11-03T05:40:02+09:00",
+   "2026-11-03T05:50:02+09:00"
   ],
   "price": [
    12242596.0,
@@ -234,10 +235,12 @@
    12137406.0,
    12170521.0,
    12150873.0,
-   12124735.0
+   12124735.0,
+   12145267.0
   ],
   "equity": {
    "A_ma_cross": [
+    1000000.0,
     1000000.0,
     1000000.0,
     1000000.0,
@@ -321,9 +324,11 @@
     1000000.0,
     1000000.0,
     1000000.0,
+    1000000.0,
     1000000.0
    ],
    "C_combo": [
+    1000000.0,
     1000000.0,
     1000000.0,
     1000000.0,
@@ -407,7 +412,8 @@
     988886.8816,
     991319.1602,
     989835.2168,
-    987781.2782
+    987781.2782,
+    989360.8862
    ]
   }
  },
