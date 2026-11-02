@@ -48,7 +48,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # shallow clone だと push 競合時の rebase が失敗しうるので全履歴を取る
+          # （リポジトリは小さいので clone コストは無視できる）
+          fetch-depth: 0
 
       # setup-python は使わない（ランナー同梱の Python 3.12 を使い、
       # 依存インストールも無いので 1 回あたり十数秒で終わる＝無料枠の節約）

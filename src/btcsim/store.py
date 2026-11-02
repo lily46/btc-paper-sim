@@ -19,6 +19,7 @@ from __future__ import annotations
 import copy
 import csv
 import json
+import logging
 import os
 import subprocess
 import time
@@ -28,6 +29,8 @@ from pathlib import Path
 from typing import Any, Iterator
 
 SCHEMA_VERSION = 1
+
+log = logging.getLogger("btcsim.store")
 
 
 class StoreError(RuntimeError):
@@ -132,7 +135,7 @@ class Store:
         del ids[:-keep]
 
     # --- git 同期 ---
-    def git_sync(self, message: str, paths: list[str] | None = None, attempts: int = 3) -> bool:
+    def git_sync(self, message: str, paths: list[str] | None = None, attempts: int = 5) -> bool:
         """変更を commit して push する。競合時は rebase して再試行。"""
         paths = paths or ["state", "docs", "reports"]
         paths = [p for p in paths if (self.root / p).exists()]
@@ -154,10 +157,22 @@ class Store:
         except subprocess.CalledProcessError as exc:
             raise GitSyncError(f"git commit 失敗: {exc.stderr}") from exc
 
+        # 別ジョブが同時に push すると競合する（10 分ごとの無人運転では必ず起きる）。
+        # origin の先頭に rebase して載せ替えてから再試行する。
+        branch = (run("rev-parse", "--abbrev-ref", "HEAD", check=False).stdout or "main").strip()
         for i in range(attempts):
-            if run("push", check=False).returncode == 0:
+            push = run("push", "origin", f"HEAD:{branch}", check=False)
+            if push.returncode == 0:
                 return True
-            run("pull", "--rebase", "--autostash", check=False)
+            log.warning("git push 失敗 (%d/%d): %s", i + 1, attempts,
+                        (push.stderr or "").strip().splitlines()[-1:] or "")
+            fetch = run("fetch", "origin", branch, check=False)
+            if fetch.returncode != 0:
+                log.warning("git fetch 失敗: %s", (fetch.stderr or "").strip())
+            rebase = run("rebase", f"origin/{branch}", check=False)
+            if rebase.returncode != 0:
+                log.warning("git rebase 失敗: %s", (rebase.stderr or "").strip())
+                run("rebase", "--abort", check=False)
             time.sleep(2 * (i + 1))
         raise GitSyncError(f"git push に {attempts} 回失敗しました（状態はローカルに保存済み）")
 
