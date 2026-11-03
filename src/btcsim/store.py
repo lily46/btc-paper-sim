@@ -46,9 +46,13 @@ class GitSyncError(StoreError):
 
 
 class Store:
-    def __init__(self, root: Path | str):
+    def __init__(self, root: Path | str, state_dirname: str = "state"):
+        """state_dirname を変えると、同じリポジトリ内で別の実験を併走できる。
+
+        現物の実験は "state"、FX（証拠金取引）の実験は "state_fx" を使う。
+        """
         self.root = Path(root)
-        self.state_dir = self.root / "state"
+        self.state_dir = self.root / state_dirname
         self.state_path = self.state_dir / "state.json"
         self.trades_csv = self.state_dir / "trades.csv"
         self.market_csv = self.state_dir / "market.csv"
@@ -143,7 +147,7 @@ class Store:
     # --- git 同期 ---
     def git_sync(self, message: str, paths: list[str] | None = None, attempts: int = 5) -> bool:
         """変更を commit して push する。競合時は rebase して再試行。"""
-        paths = paths or ["state", "docs", "reports"]
+        paths = paths or [str(self.state_dir.relative_to(self.root)), "docs", "reports"]
         paths = [p for p in paths if (self.root / p).exists()]
         if not paths:
             return True

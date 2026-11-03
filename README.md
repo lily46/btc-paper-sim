@@ -32,6 +32,11 @@ GitHub Actions (自己連鎖 330分ループ / cron 7,17,...,57 は保険)
 | `src/btcsim/portfolio.py` | 仮想残高・板を歩く約定シミュレーション・資金管理ルール |
 | `src/btcsim/strategies.py` | 戦略 A / B / C / D / E |
 | `src/btcsim/ticks.py` | 10 分ティック列からの変化率・データ欠落検出（戦略 E 用） |
+| `src/btcsim/fx/account.py` | **FX**: 証拠金口座・ショート建玉・ロスカット・建玉管理料 |
+| `src/btcsim/fx/strategies.py` | **FX**: 戦略 F / G / H（ロング・ショート両方向） |
+| `src/btcsim/fx/run.py` | **FX**: 1 ティックのオーケストレーション |
+| `config_fx.json` | **FX** 実験のパラメータ（レバレッジ・ロスカット・スワップ） |
+| `docs/fx.html` | **FX** ダッシュボード UI |
 | `src/btcsim/store.py` | 永続化（JSON + CSV を git にコミット）・冪等性 |
 | `src/btcsim/run.py` | 1 ティックのオーケストレーション（エントリポイント） |
 | `src/btcsim/metrics.py` | 集計（ダッシュボードとレポートで共通） |
@@ -122,6 +127,56 @@ A〜D が売買頻度の低い戦略なので、10 分ごとの監視を活か�
 - A〜D と同じ手数料・スリッページ・最低注文数量・残高チェック・最大ドローダウン 10% 停止が適用される。
 - 取引ごとに **建値・売値・数量・手数料・スプレッド・スリッページ・保有時間・
   エントリー理由・エグジット種別・実現損益**を記録する（`state/trades.csv`）。
+
+## 2-FX. もう 1 つの実験: FX（証拠金取引・空売りあり）
+
+現物の実験（A〜E）とは**完全に独立した別の実験**として、bitFlyer Lightning FX
+（`FX_BTC_JPY`）のショート可能・レバレッジありモデルを併走させている。
+
+> ⚠️ こちらも **仮想売買のみ**。bitFlyer の Public API で `FX_BTC_JPY` の価格と板を
+> 読むだけで、実注文・証拠金の入出金は一切行わない。
+
+| | 戦略 | 対応する現物戦略 | 内容 |
+|---|---|---|---|
+| F | 短期モメンタム（両方向） | E | 30分 +0.25% でロング / −0.25% でショート。利確 +0.8% / 損切り −0.5% / 最大 6 時間 / 逆行でドテン |
+| G | 移動平均クロス（ドテン） | A | ゴールデンクロスでロング、デッドクロスでショートへ乗り換え。損切り −3% |
+| H | レバレッジ・ロング放置 | D | 開始時に 2 倍のロングを建てて放置（**ロスカットはする**） |
+
+### 現物モデルとの違い
+
+- **ショート（空売り）ができる**。建玉は「数量 + 方向」で持ち、BTC 残高は存在しない。
+- **レバレッジ 2 倍**（日本の個人向け暗号資産証拠金取引の上限）。建玉上限は証拠金 × 2。
+- **強制ロスカット**: 証拠金維持率が **80% 未満**になったら、戦略の判断より先に成行で決済する。
+  リスクそのものなので、ベンチマーク H でもロスカットは止めない。
+- **建玉管理料（スワップ）**: 想定元本の **0.04%/日**。10 分ごとに経過時間で按分して
+  証拠金から引く（実際の bitFlyer は 1 日 1 回課金。合計額は同じだがタイミングは異なる）。
+- **取引手数料は既定 0%**（bitFlyer の FX は取引手数料無料。代わりに上の建玉管理料がかかる）。
+  `config_fx.json` の `fees.taker_fee_rate` で変更可能。
+- 評価は「いま決済できる価格」で行う: ロングは `best_bid`、ショートは `best_ask`。
+- 1 回の想定元本は 20 万円（= 証拠金 10 万円 × 2 倍）。現物 E の 10 万円と
+  「同じ値幅で同じ金額が動く」ように揃えてある。
+- 同時 1 建玉。ドテンは「決済 → 新規」の 2 取引として記録する。
+
+### 独立しているもの
+
+| | 現物の実験 | FX の実験 |
+|---|---|---|
+| 設定 | `config.json` | `config_fx.json` |
+| 状態（正本） | `state/state.json` | `state_fx/state.json` |
+| ダッシュボード | `docs/index.html` + `docs/data.json` | `docs/fx.html` + `docs/fx-data.json` |
+| ローカル用単体HTML | `docs/report.html` | `docs/fx-report.html` |
+| 最終レポート | `reports/final_report.*` | `reports/fx_final_report.*` |
+| Workflow | `simulate.yml`（cron 7,17,…） | `simulate-fx.yml`（cron 3,13,…） |
+| 一時停止フラグ | `BTCSIM_PAUSED` | `BTCSIM_FX_PAUSED` |
+| エントリポイント | `python -m btcsim.run` | `python -m btcsim.fx.run` |
+
+cron を 10 分ずらし、commit 対象パスも分けてあるので、2 つの Workflow が同時に
+push しても衝突しにくい（衝突しても `git_sync` が rebase して再試行する）。
+
+**FX と現物は別市場**で、価格にプレミアム/ディスカウントの乖離がある。したがって
+「まったく同じ値動きでの比較」ではない。FX 側のレポート/ダッシュボードには
+**現物の対応戦略との比較**（FX 開始以降の共通期間）を載せているが、そこに出る差は
+「空売りの効果」と「レバレッジ 2 倍の効果」と「市場の違い」が混ざった値である。
 
 ### 資金管理ルール（A / B / C）
 
@@ -241,11 +296,12 @@ private リポジトリでは GitHub Pages が使えません（GitHub Pro 以�
 
 ```bash
 cd btc-sim
-git pull                 # 最新の状態を取得
-start docs/report.html   # Windows（mac は open、Linux は xdg-open）
+git pull                    # 最新の状態を取得
+start docs/report.html      # 現物（A〜E）
+start docs/fx.html          # FX（F〜H）※ Pages 経由なら fx.html、ローカルなら fx-report.html
 ```
 
-- `docs/report.html` … **ダブルクリックで開ける自己完結 HTML**（ダッシュボード本体）。
+- `docs/report.html` / `docs/fx-report.html` … **ダブルクリックで開ける自己完結 HTML**。
   ネットワーク通信をしないため `file://` でもグラフ・表がすべて表示されます。
 - `docs/index.html` + `docs/data.json` … Pages / Web サーバー用（将来 public 化や
   GitHub Pro にした場合はこちらをそのまま公開できます）。UI はこの 1 ファイルが
@@ -267,6 +323,10 @@ start docs/report.html   # Windows（mac は open、Linux は xdg-open）
 ---
 
 ## 6. 起動・停止・再開
+
+> FX 実験の操作は、下表の `simulate.yml` を `simulate-fx.yml`、
+> `BTCSIM_PAUSED` を `BTCSIM_FX_PAUSED`、`state/state.json` を
+> `state_fx/state.json` に読み替えてください（完全に独立して操作できます）。
 
 | 操作 | 方法 |
 |---|---|

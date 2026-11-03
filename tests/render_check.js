@@ -1,5 +1,5 @@
 // docs/report.html の描画ロジックを Node 上で実行して検証する補助スクリプト。
-// 使い方: node tests/render_check.js <report.html のパス>
+// 使い方: node tests/render_check.js <report.html のパス> [spot|fx]
 // （pytest からは呼ばれない。Node があるときの手動検証用。）
 const fs = require("fs");
 
@@ -17,7 +17,8 @@ function makeNode(id) {
   };
 }
 for (const id of ["meta", "gen", "status", "cards", "priceChart", "equityChart",
-                  "equityLegend", "table", "trades"]) {
+                  "equityLegend", "table", "trades", "bySide", "cmp", "cmpNote",
+                  "common", "commonNote"]) {
   nodes[id] = makeNode(id);
 }
 global.document = {
@@ -31,9 +32,14 @@ new Function(script)();
 setTimeout(() => {
   const fail = (m) => { console.error("FAIL: " + m); process.exit(1); };
   if (nodes.status.innerHTML.includes("読み込みエラー")) fail("読み込みエラーになった: " + nodes.status.innerHTML);
-  for (const [id, needle] of [["status", "実験期間"], ["cards", "Buy & Hold"],
-                              ["table", "最大DD%"], ["trades", "BUY"],
-                              ["equityLegend", "移動平均"], ["meta", "BTC_JPY"]]) {
+  const kind = process.argv[3] || "spot";
+  const expect = kind === "fx"
+    ? [["status", "実験期間"], ["cards", "レバレッジ・ロング放置"], ["table", "最大DD%"],
+       ["trades", "新規"], ["equityLegend", "モメンタム"], ["meta", "FX_BTC_JPY"],
+       ["bySide", "方向"]]
+    : [["status", "実験期間"], ["cards", "Buy & Hold"], ["table", "最大DD%"],
+       ["trades", "BUY"], ["equityLegend", "移動平均"], ["meta", "BTC_JPY"]];
+  for (const [id, needle] of expect) {
     if (!nodes[id].innerHTML.includes(needle)) fail(`#${id} に「${needle}」が無い: ${nodes[id].innerHTML.slice(0, 200)}`);
   }
   for (const id of ["priceChart", "equityChart"]) {

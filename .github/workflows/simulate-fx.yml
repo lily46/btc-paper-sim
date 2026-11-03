@@ -1,0 +1,127 @@
+name: fx-paper-trade-tick
+
+on:
+  schedule:
+    # 10 分間隔。ただし「キリのいい分」は避けている。
+    # GitHub 公式ドキュメントが「schedule は高負荷時に遅延する。高負荷の時間帯には
+    # 毎時 0 分付近が含まれるので、毎時の異なる分にスケジュールすること」と明記して
+    # いるため。実際 0,10,20,30,40,50 では 2 時間まったく発火しなかった。
+    #
+    # なお主駆動はこの cron ではなく「ジョブ自身が次のジョブを起動する自己連鎖」
+    # （下の Chain ステップ）。cron はあくまで冗長化の保険。
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "冪等チェックを無視して実行（同一10分枠でも処理する）"
+        type: boolean
+        default: false
+      report_only:
+        description: "売買せずレポート/ダッシュボードのみ再生成"
+        type: boolean
+        default: false
+      loop_minutes:
+        description: "常駐してティックを処理する分数（0 = 1 ティックで終了）"
+        type: string
+        default: ""
+      chain_now:
+        description: "短時間ジョブでも連鎖を実行する（連鎖の動作確認用）"
+        type: boolean
+        default: false
+
+# 同時実行防止（前の実行を取り消さずに直列化する）
+concurrency:
+  group: fx-paper-trade-tick
+  cancel-in-progress: false
+
+permissions:
+  contents: write          # state/ docs/ reports/ を同じリポジトリに commit するため
+
+jobs:
+  tick:
+    # リポジトリ変数 BTCSIM_FX_PAUSED=true で一時停止できる
+    if: vars.BTCSIM_FX_PAUSED != 'true'
+    runs-on: ubuntu-latest
+    # 実際の稼働時間は --loop-minutes が決める。長時間ループを手動起動
+    # できるよう上限だけ広く取る（GitHub のジョブ上限は 6 時間）。
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # shallow clone だと push 競合時の rebase が失敗しうるので全履歴を取る
+          # （リポジトリは小さいので clone コストは無視できる）
+          fetch-depth: 0
+
+      # setup-python は使わない（ランナー同梱の Python 3.12 を使い、
+      # 依存インストールも無いので 1 回あたり十数秒で終わる＝無料枠の節約）
+      - name: Show Python version
+        run: python3 --version
+
+      # このジョブが何分常駐するかを 1 箇所で決める（後続ステップでも参照する）
+      - name: Resolve loop minutes
+        id: loop
+        run: |
+          if [ -n "${{ inputs.loop_minutes }}" ]; then
+            m="${{ inputs.loop_minutes }}"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            m=25
+          else
+            m=0
+          fi
+          echo "minutes=$m" >> "$GITHUB_OUTPUT"
+          echo "このジョブは ${m} 分ループします（0 = 1 ティックで終了）"
+
+      - name: Run one simulation tick
+        id: tick
+        env:
+          PYTHONPATH: src
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python3 -m btcsim.fx.run \
+            ${{ (inputs.report_only == true) && '--report-only' || '--git' }} \
+            ${{ (inputs.force == true) && '--force' || '' }} \
+            --loop-minutes "${{ steps.loop.outputs.minutes }}" \
+            --verbose
+
+      - name: Summarize to job log
+        if: always()
+        run: |
+          echo "### FX（証拠金取引）の直近の実行結果" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/fx_step_summary.py >> "$GITHUB_STEP_SUMMARY" || echo "- サマリー生成に失敗" >> "$GITHUB_STEP_SUMMARY"
+
+      # GitHub のスケジューラは実測で 1 時間以上発火しないことがあったため、
+      # 長時間ループ（>= 300 分）のジョブは終了直前に自分で次のジョブを起動して
+      # 連鎖させる。cron はあくまで保険として残している。
+      # GITHUB_TOKEN では workflow_dispatch を起動できない仕様なので、
+      # workflow スコープを持つ別トークンを Secret CHAIN_TOKEN に入れて使う。
+      - name: Chain the next long run
+        if: always() && (fromJSON(steps.loop.outputs.minutes) >= 300 || inputs.chain_now == true)
+        env:
+          GH_TOKEN: ${{ secrets.CHAIN_TOKEN }}
+          # 連鎖で起動する次のジョブは常にこの長さにする
+          # （動作確認用の短時間ジョブが短いジョブを無限に生むのを防ぐ）
+          CHAIN_MINUTES: "330"
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::CHAIN_TOKEN が未設定のため連鎖しません（cron 任せになります）"
+            exit 0
+          fi
+          status=$(python3 -c "import json;print((json.load(open('state_fx/state.json'))['experiment'] or {}).get('status',''))" 2>/dev/null || echo "")
+          if [ "$status" = "finished" ]; then
+            echo "実験は終了済みなので連鎖しません。"
+            exit 0
+          fi
+          echo "次の ${CHAIN_MINUTES} 分ジョブを起動します。"
+          gh workflow run simulate-fx.yml --repo "$GITHUB_REPOSITORY" -f loop_minutes="$CHAIN_MINUTES"
+
+      - name: Upload logs/state on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btcsim-fx-debug-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            state_fx/
+            reports/
+            docs/fx-data.json
+          retention-days: 7
+          if-no-files-found: ignore

@@ -8,6 +8,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG_PATH = ROOT / "config.json"
+FX_CONFIG_PATH = ROOT / "config_fx.json"
 
 # Decimal に変換するキー（値が文字列で書かれている前提）
 _DECIMAL_KEYS = {
@@ -19,6 +20,9 @@ _DECIMAL_KEYS = {
     # 戦略 E（短期モメンタム）
     "entry_momentum_pct", "entry_long_momentum_pct", "entry_max_spread_pct",
     "order_jpy", "take_profit_pct", "stop_loss_pct", "trend_reversal_pct",
+    # FX（証拠金取引）
+    "leverage", "leverage_target", "liquidation_margin_ratio",
+    "swap_rate_per_day", "order_notional_jpy",
 }
 
 

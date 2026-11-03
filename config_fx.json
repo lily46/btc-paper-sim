@@ -1,0 +1,73 @@
+{
+  "experiment": {
+    "initial_capital_jpy": "1000000",
+    "duration_hours": 168,
+    "timezone": "Asia/Tokyo",
+    "product_code": "FX_BTC_JPY",
+    "tick_interval_minutes": 10
+  },
+  "fees": {
+    "_comment": "bitFlyer Lightning FX は取引手数料無料。代わりに建玉管理料(スワップ)が日次でかかる。最新の料率は公式で要確認。",
+    "taker_fee_rate": "0",
+    "slippage_bps": "5",
+    "swap_rate_per_day": "0.0004"
+  },
+  "risk": {
+    "leverage": "2",
+    "liquidation_margin_ratio": "0.8",
+    "max_drawdown_stop": "0.10",
+    "min_order_size_btc": "0.01",
+    "size_precision": 8
+  },
+  "sanity": {
+    "max_price_jump_pct": "0.15",
+    "min_price_jpy": "100000",
+    "max_price_jpy": "500000000",
+    "max_spread_pct": "0.01"
+  },
+  "data": {
+    "warmup_bootstrap": true,
+    "bootstrap_source": "bitbank",
+    "max_bars_kept": 1200,
+    "max_ticks_kept": 1200
+  },
+  "strategies": {
+    "F_momentum_ls": {
+      "enabled": true,
+      "duration_hours": 168,
+      "_comment": "現物Eのミラー。上昇でロング・下落でショート",
+      "lookback_short_minutes": 30,
+      "lookback_long_minutes": 60,
+      "entry_momentum_pct": "0.0025",
+      "entry_max_spread_pct": "0.0015",
+      "order_notional_jpy": "200000",
+      "take_profit_pct": "0.008",
+      "stop_loss_pct": "0.005",
+      "max_hold_minutes": 360,
+      "cooldown_minutes": 30,
+      "max_data_gap_minutes": 25
+    },
+    "G_ma_cross_ls": {
+      "enabled": true,
+      "duration_hours": 168,
+      "_comment": "現物Aのミラー。クロスでドテン（反対方向へ乗り換え）",
+      "timeframe": "30m",
+      "short_window": 6,
+      "long_window": 24,
+      "order_notional_jpy": "200000",
+      "take_profit_pct": "0",
+      "stop_loss_pct": "0.03",
+      "max_hold_minutes": 0,
+      "cooldown_minutes": 0
+    },
+    "H_long_hold_fx": {
+      "enabled": true,
+      "duration_hours": 168,
+      "_comment": "現物Dのミラー。2倍ロングを建てて放置（ロスカットはする）",
+      "leverage_target": "2",
+      "take_profit_pct": "0",
+      "stop_loss_pct": "0",
+      "max_hold_minutes": 0
+    }
+  }
+}
