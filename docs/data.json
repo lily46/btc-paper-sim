@@ -1,6 +1,9 @@
 {
  "disclaimer": "これは仮想売買（ペーパートレード）の記録です。実際の注文・入出金は一切行っていません。",
- "generated_at_utc": "2026-11-03T02:30:03+00:00",
+ "common_period": {
+  "available": false
+ },
+ "generated_at_utc": "2026-11-03T02:33:23+00:00",
  "paper_trading_only": true,
  "experiment": {
   "started_at_jst": "2026-11-02T22:21:20+09:00",
@@ -10,8 +13,8 @@
   "timezone": "Asia/Tokyo",
   "product_code": "BTC_JPY",
   "initial_capital_jpy": "1000000",
-  "remaining_seconds": 557477,
-  "remaining_human": "6日 10時間 51分"
+  "remaining_seconds": 557277,
+  "remaining_human": "6日 10時間 47分"
  },
  "market": {
   "last_fetch_jst": "2026-11-03T11:30:02+09:00",
@@ -43,6 +46,21 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
+   "started_at_jst": "2026-11-02T22:21:20+09:00",
+   "ends_at_jst": "2026-11-09T22:21:20+09:00",
+   "window_status": "running",
+   "window_finished_at_jst": null,
+   "remaining_seconds": 557277,
+   "remaining_human": "6日 10時間 47分",
+   "own_window": false,
+   "avg_hold_minutes": null,
+   "open_position": false,
+   "position_entry_price": null,
+   "last_reason": "no cross (short=12158792, long=12165139)",
+   "exit_breakdown": {},
+   "avg_win_jpy": null,
+   "avg_loss_jpy": null,
+   "breakeven_win_rate_pct": null,
    "vs_buy_and_hold_jpy": "10474.7563"
   },
   "B_rsi_reversal": {
@@ -65,6 +83,21 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
+   "started_at_jst": "2026-11-02T22:21:20+09:00",
+   "ends_at_jst": "2026-11-09T22:21:20+09:00",
+   "window_status": "running",
+   "window_finished_at_jst": null,
+   "remaining_seconds": 557277,
+   "remaining_human": "6日 10時間 47分",
+   "own_window": false,
+   "avg_hold_minutes": null,
+   "open_position": true,
+   "position_entry_price": null,
+   "last_reason": "RSI=43.71 (no crossing)",
+   "exit_breakdown": {},
+   "avg_win_jpy": null,
+   "avg_loss_jpy": null,
+   "breakeven_win_rate_pct": null,
    "vs_buy_and_hold_jpy": "10504.3850"
   },
   "C_combo": {
@@ -87,6 +120,21 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
+   "started_at_jst": "2026-11-02T22:21:20+09:00",
+   "ends_at_jst": "2026-11-09T22:21:20+09:00",
+   "window_status": "running",
+   "window_finished_at_jst": null,
+   "remaining_seconds": 557277,
+   "remaining_human": "6日 10時間 47分",
+   "own_window": false,
+   "avg_hold_minutes": null,
+   "open_position": false,
+   "position_entry_price": null,
+   "last_reason": "trend=down, RSI=43.71",
+   "exit_breakdown": {},
+   "avg_win_jpy": null,
+   "avg_loss_jpy": null,
+   "breakeven_win_rate_pct": null,
    "vs_buy_and_hold_jpy": "10474.7563"
   },
   "D_buy_and_hold": {
@@ -109,14 +157,30 @@
    "closed_trades": 0,
    "halted": false,
    "halt_reason": "",
+   "started_at_jst": "2026-11-02T22:21:20+09:00",
+   "ends_at_jst": "2026-11-09T22:21:20+09:00",
+   "window_status": "running",
+   "window_finished_at_jst": null,
+   "remaining_seconds": 557277,
+   "remaining_human": "6日 10時間 47分",
+   "own_window": false,
+   "avg_hold_minutes": null,
+   "open_position": true,
+   "position_entry_price": null,
+   "last_reason": "buy & hold: holding (no further trades)",
+   "exit_breakdown": {},
+   "avg_win_jpy": null,
+   "avg_loss_jpy": null,
+   "breakeven_win_rate_pct": null,
    "vs_buy_and_hold_jpy": "0.0000"
   }
  },
+ "strategy_windows": {},
  "stats": {
-  "runs": 80,
+  "runs": 81,
   "api_errors": 0,
   "data_rejections": 0,
-  "skipped_duplicate_ticks": 4,
+  "skipped_duplicate_ticks": 5,
   "missed_schedules": 3,
   "expected_ticks": 79,
   "observed_ticks": 76
@@ -699,6 +763,23 @@
    "D_buy_and_hold": {
     "enabled": "True",
     "allocation_pct": "1.00"
+   },
+   "E_short_momentum": {
+    "enabled": "True",
+    "duration_hours": "168",
+    "_comment": "10分ごとのティック列から短期モメンタムを計算する短期売買戦略（A〜Dとは独立した資金・独立した168時間）",
+    "lookback_short_minutes": "30",
+    "lookback_long_minutes": "60",
+    "entry_momentum_pct": "0.0025",
+    "entry_long_momentum_pct": "0",
+    "entry_max_spread_pct": "0.0015",
+    "order_jpy": "100000",
+    "take_profit_pct": "0.008",
+    "stop_loss_pct": "0.005",
+    "max_hold_minutes": "360",
+    "cooldown_minutes": "30",
+    "trend_reversal_pct": "-0.0025",
+    "max_data_gap_minutes": "25"
    }
   }
  }
