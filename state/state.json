@@ -27,7 +27,7 @@
    "sells": 1,
    "wins": 0,
    "losses": 1,
-   "peak_equity": "1000724.3778",
+   "peak_equity": "1000989.5698",
    "max_drawdown": "0.001271127052296278328597023369",
    "halted": false,
    "halt_reason": "",
@@ -52,7 +52,7 @@
    "sells": 0,
    "wins": 0,
    "losses": 0,
-   "peak_equity": "1002350.8717",
+   "peak_equity": "1002617.3623",
    "max_drawdown": "0.002107869331198299052439300101",
    "halted": false,
    "halt_reason": "",
@@ -102,7 +102,7 @@
    "sells": 0,
    "wins": 0,
    "losses": 0,
-   "peak_equity": "1001331.7647",
+   "peak_equity": "1002307.3163",
    "max_drawdown": "0.01801304056843129526658868011",
    "halted": false,
    "halt_reason": "",
@@ -1671,7 +1671,7 @@
     "h": "12305000.0",
     "l": "12232000.0",
     "c": "12286857.0",
-    "v": "19.54622061"
+    "v": "21.72512023"
    },
    {
     "ts": 1793721600,
@@ -1679,15 +1679,23 @@
     "h": "12294407.0",
     "l": "12236070.0",
     "c": "12262444.0",
-    "v": "3.25496056"
+    "v": "4.12525507"
    },
    {
     "ts": 1793723400,
     "o": "12263253.0",
-    "h": "12278748.0",
+    "h": "12300019.0",
     "l": "12255806.0",
-    "c": "12262271.0",
-    "v": "0.18524504"
+    "c": "12297250.0",
+    "v": "0.80781032"
+   },
+   {
+    "ts": 1793725200,
+    "o": "12302978.0",
+    "h": "12302978.0",
+    "l": "12302978.0",
+    "c": "12302978.0",
+    "v": "0"
    }
   ],
   "1h": [
@@ -2455,15 +2463,23 @@
     "h": "12305000.0",
     "l": "12212152.0",
     "c": "12286857.0",
-    "v": "31.33725539"
+    "v": "33.51615501"
    },
    {
     "ts": 1793721600,
     "o": "12286857.0",
-    "h": "12294407.0",
+    "h": "12300019.0",
     "l": "12236070.0",
-    "c": "12262271.0",
-    "v": "3.44020560"
+    "c": "12297250.0",
+    "v": "4.93306539"
+   },
+   {
+    "ts": 1793725200,
+    "o": "12302978.0",
+    "h": "12302978.0",
+    "l": "12302978.0",
+    "c": "12302978.0",
+    "v": "0"
    }
   ]
  },
@@ -4497,6 +4513,19 @@
    "best_bid_size": "0.04439403",
    "best_ask_size": "0.0014775",
    "source": "bitflyer:getticker"
+  },
+  {
+   "tick_id": "1793725200",
+   "ts": 1793725202,
+   "fetched_at_jst": "2026-11-04T02:00:02+09:00",
+   "fetched_at_utc": "2026-11-03T17:00:02+00:00",
+   "exchange_timestamp": "2026-11-03T17:00:01.89",
+   "ltp": "12302978.0",
+   "best_bid": "12300346.0",
+   "best_ask": "12303076.0",
+   "best_bid_size": "0.04278427",
+   "best_ask_size": "0.1523",
+   "source": "bitflyer:getticker"
   }
  ],
  "equity_history": [
@@ -6367,6 +6396,18 @@
     "D_buy_and_hold": "999204.7330",
     "E_short_momentum": "998361.1469"
    }
+  },
+  {
+   "ts": 1793725202,
+   "jst": "2026-11-04T02:00:02+09:00",
+   "price": "12302978.0",
+   "equity": {
+    "A_ma_cross": "1000989.5698",
+    "B_rsi_reversal": "1002617.3623",
+    "C_combo": "1000000.0000",
+    "D_buy_and_hold": "1002307.3163",
+    "E_short_momentum": "998672.3906"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -6531,7 +6572,8 @@
   "1793722800",
   "1793723400",
   "1793724000",
-  "1793724600"
+  "1793724600",
+  "1793725200"
  ],
  "trades": [
   {
@@ -6846,32 +6888,32 @@
   }
  ],
  "stats": {
-  "runs": 169,
+  "runs": 170,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 7,
   "missed_schedules": 3,
-  "expected_ticks": 165,
-  "observed_ticks": 162
+  "expected_ticks": 166,
+  "observed_ticks": 163
  },
  "last_run": {
-  "tick_id": "1793724600",
-  "at_jst": "2026-11-04T01:50:02+09:00",
+  "tick_id": "1793725200",
+  "at_jst": "2026-11-04T02:00:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
     "action": "HOLD",
-    "reason": "no cross (short=12235471, long=12168082)",
+    "reason": "no cross (short=12248786, long=12174631)",
     "executed": false
    },
    "B_rsi_reversal": {
     "action": "HOLD",
-    "reason": "RSI=60.95 (no crossing)",
+    "reason": "RSI=64.73 (no crossing)",
     "executed": false
    },
    "C_combo": {
     "action": "HOLD",
-    "reason": "trend=up, RSI=60.95",
+    "reason": "trend=up, RSI=64.73",
     "executed": false
    },
    "D_buy_and_hold": {
@@ -6881,7 +6923,7 @@
    },
    "E_short_momentum": {
     "action": "HOLD",
-    "reason": "holding 110min, pnl +0.24%",
+    "reason": "holding 120min, pnl +0.55%",
     "executed": false
    }
   },
