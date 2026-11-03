@@ -1,3 +1,4 @@
-ts,strategy,side,price,size,gross_jpy,fee_jpy,jpy_before,jpy_after,btc_before,btc_after,realized_pnl,equity_after,signal_key,reason
-2026-11-02T22:21:20+09:00,D_buy_and_hold,BUY,12253650.0665,0.08148610,998502.1547,1497.7532,1000000,0.0921,0,0.08148610,0,997689.7435,D:initial,initial buy & hold allocation
-2026-11-03T06:00:02+09:00,B_rsi_reversal,BUY,12123502.7220,0.01649688,199999.9696,300.0000,1000000,799700.0304,0,0.01649688,0,999496.7300,B:30m:1793651400:BUY,RSI entered oversold (29.53)
+ts,strategy,side,price,size,gross_jpy,fee_jpy,jpy_before,jpy_after,btc_before,btc_after,realized_pnl,equity_after,signal_key,reason,spread_pct,slippage_pct,hold_minutes,entry_reason,exit_kind,entry_price
+2026-11-02T22:21:20+09:00,D_buy_and_hold,BUY,12253650.0665,0.08148610,998502.1547,1497.7532,1000000,0.0921,0,0.08148610,0,997689.7435,D:initial,initial buy & hold allocation,,,,,,
+2026-11-03T06:00:02+09:00,B_rsi_reversal,BUY,12123502.7220,0.01649688,199999.9696,300.0000,1000000,799700.0304,0,0.01649688,0,999496.7300,B:30m:1793651400:BUY,RSI entered oversold (29.53),,,,,,
+2026-11-03T12:30:02+09:00,A_ma_cross,BUY,12131110.5240,0.01648653,199999.9176,299.9999,1000000,799700.0825,0,0.01648653,0,999551.5138,A:30m:1793674800:BUY,golden cross short=12153066 long=12152044,0.0002428621302044595558658793886,0.0005,,,,12131110.5240
