@@ -503,3 +503,32 @@ def test_no_private_api_in_fx_source():
         text = path.read_text(encoding="utf-8").lower()
         for b in banned:
             assert b.lower() not in text, f"{path} に {b} が含まれています"
+
+
+def test_fx_report_includes_spot_comparison(tmp_path, fxcfg_nb, market, monkeypatch):
+    """FX レポートに現物比較セクションが入ること（ダッシュボードと同じ内容）。"""
+    from btcsim import run as spot_run
+    from btcsim.config import Config
+    from btcsim.fx import report as fx_report
+
+    spot_cfg = Config.load()
+    spot_cfg["data"]["warmup_bootstrap"] = False
+
+    # 現物側のティッカーは BTC_JPY を要求するのでスタブを差し替える
+    from btcsim import api
+    monkeypatch.setattr(api, "get_ticker", lambda p, s: {
+        "ltp": PRICE, "best_bid": PRICE - D(2000), "best_ask": PRICE + D(2000),
+        "best_bid_size": D(1), "best_ask_size": D(1), "volume_24h": D(100),
+        "exchange_timestamp": "2026-11-03T00:00:00.000"})
+    spot_run.process_tick(tmp_path, spot_cfg)          # 現物の state/ を作る
+    fxrun.process_tick(tmp_path, fxcfg_nb)             # FX の state_fx/ を作る
+
+    s = Store(tmp_path, "state_fx")
+    s.load()
+    paths = fx_report.build(tmp_path, s.state, fxcfg_nb)
+    data = json.loads(paths["json"].read_text(encoding="utf-8"))
+    assert "spot_comparison" in data
+    md = paths["md"].read_text(encoding="utf-8")
+    assert "空売り解禁の効果" in md
+    # 比較できる場合はペア表が出る / できない場合も理由つきで出る
+    assert ("対応する現物戦略" in md) or ("比較なし" in md)

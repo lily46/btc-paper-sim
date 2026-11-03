@@ -25,6 +25,8 @@ def build(root: Path | str, state: dict[str, Any], cfg: dict) -> dict[str, Path 
     out_dir = root / "reports"
     out_dir.mkdir(parents=True, exist_ok=True)
     summary = summarize(state, cfg)
+    # 現物実験との比較はダッシュボードと同じものをレポートにも載せる
+    summary["spot_comparison"] = fx_dashboard._spot_comparison(root, summary)
 
     json_path = out_dir / "fx_final_report.json"
     json_path.write_text(json.dumps(summary, ensure_ascii=False, indent=1, default=str),
