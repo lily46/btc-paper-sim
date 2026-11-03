@@ -59,6 +59,23 @@
     "D_buy_and_hold": {
       "enabled": true,
       "allocation_pct": "1.00"
+    },
+    "E_short_momentum": {
+      "enabled": true,
+      "duration_hours": 168,
+      "_comment": "10分ごとのティック列から短期モメンタムを計算する短期売買戦略（A〜Dとは独立した資金・独立した168時間）",
+      "lookback_short_minutes": 30,
+      "lookback_long_minutes": 60,
+      "entry_momentum_pct": "0.0025",
+      "entry_long_momentum_pct": "0",
+      "entry_max_spread_pct": "0.0015",
+      "order_jpy": "100000",
+      "take_profit_pct": "0.008",
+      "stop_loss_pct": "0.005",
+      "max_hold_minutes": 360,
+      "cooldown_minutes": 30,
+      "trend_reversal_pct": "-0.0025",
+      "max_data_gap_minutes": 25
     }
   }
 }

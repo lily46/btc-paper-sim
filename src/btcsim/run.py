@@ -108,6 +108,56 @@ def _bootstrap_bars(now: datetime, tf: str, stats: ApiStats) -> list[dict]:
     return out
 
 
+def _window_over(win: dict, now_ts: int) -> bool:
+    return win.get("status") == "finished" or now_ts >= int(win["ends_ts"])
+
+
+def ensure_windows(state: dict, cfg: Config, now_ts: int, *, allow_new: bool) -> list[str]:
+    """戦略ごとの実験期間を用意する。
+
+    * 既存戦略（A〜D）は全体 `experiment` の開始/終了をそのまま複製する
+      （値を書き換えないので A〜D の期間は不変）。
+    * 途中から追加された戦略（E など）は「最初の正常実行」を起点に、
+      その戦略の `duration_hours` ぶんの独立した期間を持つ。
+    * 初期化は 1 度だけ（既に window がある戦略は触らない）。
+    戻り値は今回新しく追加した戦略 ID のリスト。
+    """
+    exp = state["experiment"]
+    tz = exp["timezone"]
+    windows = state.setdefault("strategy_windows", {})
+    added: list[str] = []
+    for sid in cfg.strategy_ids:
+        if sid in windows:
+            continue
+        if sid in state.get("portfolios", {}):
+            windows[sid] = {
+                "started_ts": exp["started_ts"], "started_at_jst": exp["started_at_jst"],
+                "ends_ts": exp["ends_ts"], "ends_at_jst": exp["ends_at_jst"],
+                "duration_hours": exp["duration_hours"],
+                "status": "running", "finished_at_jst": None,
+                "inherited": True, "final": None,
+            }
+            continue
+        if not allow_new:
+            continue
+        hours = int(cfg["strategies"][sid].get("duration_hours", exp["duration_hours"]))
+        ends = now_ts + hours * 3600
+        windows[sid] = {
+            "started_ts": now_ts, "started_at_jst": _jst(now_ts, tz),
+            "ends_ts": ends, "ends_at_jst": _jst(ends, tz),
+            "duration_hours": hours, "status": "running", "finished_at_jst": None,
+            "inherited": False, "final": None,
+        }
+        state["portfolios"][sid] = Portfolio(
+            strategy_id=sid, initial_jpy=Decimal(exp["initial_capital_jpy"]),
+            jpy=Decimal(exp["initial_capital_jpy"])).to_dict()
+        added.append(sid)
+        log.info("戦略 %s を追加: 独立した %d 時間の期間を開始（%s 〜 %s）/ 仮想資金 %s 円",
+                 sid, hours, windows[sid]["started_at_jst"], windows[sid]["ends_at_jst"],
+                 exp["initial_capital_jpy"])
+    return added
+
+
 def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool = True) -> int:
     tz = cfg["experiment"]["timezone"]
     interval = int(cfg["experiment"]["tick_interval_minutes"])
@@ -146,8 +196,20 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
     if exp["status"] == "finished":
         log.info("実験は終了済み（%s）。市場データ取得・売買はスキップします。", exp.get("finished_at_jst"))
         return 0
-    if now_ts >= int(exp["ends_ts"]):
+    # 既存戦略の window を用意（この時点では新規戦略はまだ作らない:
+    # 新規戦略の開始は「市場データ取得が成功した最初のティック」にする）
+    ensure_windows(state, cfg, now_ts, allow_new=False)
+    windows = state["strategy_windows"]
+    pending_new = [sid for sid in cfg.strategy_ids if sid not in windows]
+    active = [sid for sid in windows if sid in cfg.strategy_ids and not _window_over(windows[sid], now_ts)]
+
+    if not active and not pending_new:
+        # 全戦略が期間を終えた → 全体終了。以後は市場データ取得も売買もしない。
         with store.transaction() as st:
+            for sid, win in st["strategy_windows"].items():
+                if win.get("status") != "finished":
+                    win["status"] = "finished"
+                    win["finished_at_jst"] = win.get("finished_at_jst") or _jst(now_ts, tz)
             st["experiment"]["status"] = "finished"
             st["experiment"]["finished_at_jst"] = _jst(now_ts, tz)
             st["stats"]["runs"] += 1
@@ -155,8 +217,8 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
         dashboard.build(root, store.state, cfg)
         store.export_csv()
         if not no_git:
-            store.git_sync("experiment finished: final report")
-        log.info("168 時間が経過したため実験を終了し、最終レポートを出力しました。")
+            store.git_sync("all strategies finished: final report")
+        log.info("全戦略が期間を終えたため実験を終了し、最終レポートを出力しました。")
         return 0
 
     # --- 市場データ取得 ---
@@ -194,8 +256,27 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
         return 0
 
     mark = ticker["best_bid"]            # 保守的に売却可能価格で評価
+    spread_pct = (ticker["best_ask"] - ticker["best_bid"]) / ticker["best_bid"]
     if exp.get("start_btc_price") in (None, ""):
         exp["start_btc_price"] = str(ticker["ltp"])
+
+    tick_record = {
+        "tick_id": tick_id,
+        "ts": now_ts,
+        "fetched_at_jst": _jst(now_ts, tz),
+        "fetched_at_utc": now.isoformat(timespec="seconds"),
+        "exchange_timestamp": ticker["exchange_timestamp"],
+        "ltp": str(ticker["ltp"]),
+        "best_bid": str(ticker["best_bid"]),
+        "best_ask": str(ticker["best_ask"]),
+        "best_bid_size": str(ticker["best_bid_size"]),
+        "best_ask_size": str(ticker["best_ask_size"]),
+        "source": "bitflyer:getticker",
+    }
+
+    # 市場データが取れた = 「正常実行」なので、ここで新規戦略を開始できる
+    newly_added = ensure_windows(state, cfg, now_ts, allow_new=True)
+    windows = state["strategy_windows"]
 
     # --- ローソク足の更新（約定履歴ベース + ティック補完） ---
     samples: list[tuple[int, Decimal, Decimal]] = []
@@ -233,21 +314,47 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
     new_trades: list[dict] = []
     decisions: dict[str, dict] = {}
     ts_jst = _jst(now_ts, tz)
+    # 戦略が参照できる市場コンテキスト（足だけでは足りない戦略 E 用）
+    ctx = {
+        "ticks": state.get("ticks", []) + [tick_record],
+        "best_bid": ticker["best_bid"],
+        "best_ask": ticker["best_ask"],
+        "spread_pct": spread_pct,
+        "now_ts": now_ts,
+    }
     for sid in cfg.strategy_ids:
         pf = portfolios[sid]
         fn = strategies.REGISTRY.get(sid)
         if fn is None:
             continue
-        sig = fn(cfg, bars, now_ts, pf)
+        win = windows.get(sid)
+        if win is not None and _window_over(win, now_ts):
+            # その戦略の 168 時間が終了 -> 新規売買はしない（評価だけ続ける）
+            if win.get("status") != "finished":
+                win["status"] = "finished"
+                win["finished_at_jst"] = _jst(now_ts, tz)
+                win["final"] = {
+                    "equity_jpy": str(pf.equity(mark)), "jpy": str(pf.jpy), "btc": str(pf.btc),
+                    "realized_pnl_jpy": str(pf.realized_pnl), "fees_jpy": str(pf.fees_paid),
+                    "trades": pf.trades, "max_drawdown": str(pf.max_drawdown),
+                }
+                log.info("戦略 %s は期間終了（%s）。新規売買を停止します。", sid, win["finished_at_jst"])
+            decisions[sid] = {"action": "HOLD", "reason": "period finished; no new trades",
+                              "executed": False}
+            continue
+        sig = fn(cfg, bars, now_ts, pf, ctx)
         entry = {"action": sig.action, "reason": sig.reason, "executed": False}
         if sig.action != "HOLD" and pf.halted:
             entry["reason"] = f"halted ({pf.halt_reason}); {sig.reason}"
         elif sig.action != "HOLD" and sig.key and sig.key == pf.last_signal_key:
             entry["reason"] = f"duplicate signal suppressed; {sig.reason}"
         elif sig.action == "BUY":
-            notional = Decimal(exp["initial_capital_jpy"]) * sig.order_pct
+            # 金額指定（E）か、初期資金に対する比率指定（A〜D）か
+            notional = (sig.order_jpy if sig.order_jpy is not None
+                        else Decimal(exp["initial_capital_jpy"]) * sig.order_pct)
             tr = pf.buy(ts=ts_jst, notional_jpy=notional, asks=board["asks"], mark_price=mark,
-                        cfg=_effective_cfg(cfg, sid), signal_key=sig.key, reason=sig.reason)
+                        cfg=_effective_cfg(cfg, sid), signal_key=sig.key, reason=sig.reason,
+                        now_ts=now_ts, spread_pct=spread_pct)
             if tr:
                 new_trades.append(dict(tr.__dict__))
                 entry["executed"] = True
@@ -255,7 +362,8 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
                 pf.bootstrapped = True
         elif sig.action == "SELL":
             tr = pf.sell(ts=ts_jst, size_btc=pf.btc, bids=board["bids"], mark_price=mark,
-                         cfg=_effective_cfg(cfg, sid), signal_key=sig.key, reason=sig.reason)
+                         cfg=_effective_cfg(cfg, sid), signal_key=sig.key, reason=sig.reason,
+                         now_ts=now_ts, spread_pct=spread_pct, exit_kind=sig.exit_kind)
             if tr:
                 new_trades.append(dict(tr.__dict__))
                 entry["executed"] = True
@@ -268,18 +376,8 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
         st["bars"] = bars
         st["portfolios"] = {sid: pf.to_dict() for sid, pf in portfolios.items()}
         st["trades"].extend(new_trades)
-        st["ticks"].append({
-            "tick_id": tick_id,
-            "fetched_at_jst": ts_jst,
-            "fetched_at_utc": now.isoformat(timespec="seconds"),
-            "exchange_timestamp": ticker["exchange_timestamp"],
-            "ltp": str(ticker["ltp"]),
-            "best_bid": str(ticker["best_bid"]),
-            "best_ask": str(ticker["best_ask"]),
-            "best_bid_size": str(ticker["best_bid_size"]),
-            "best_ask_size": str(ticker["best_ask_size"]),
-            "source": "bitflyer:getticker",
-        })
+        st["strategy_windows"] = windows
+        st["ticks"].append(tick_record)
         del st["ticks"][:-int(cfg["data"]["max_ticks_kept"])]
         st["equity_history"].append({
             "ts": now_ts, "jst": ts_jst, "price": str(ticker["ltp"]),
@@ -293,7 +391,8 @@ def process_tick(root: Path, cfg: Config, *, force: bool = False, no_git: bool =
         st["stats"]["expected_ticks"] = expected
         st["stats"]["missed_schedules"] = max(0, expected - st["stats"]["observed_ticks"])
         st["last_run"] = {"tick_id": tick_id, "at_jst": ts_jst, "status": "ok",
-                          "decisions": decisions, "trades": len(new_trades)}
+                          "decisions": decisions, "trades": len(new_trades),
+                          "strategies_added": newly_added}
         store.mark_tick_processed(tick_id)
 
     store.export_csv()
@@ -316,7 +415,9 @@ def loop_ticks(root: Path, cfg: Config, minutes: int, *, force: bool = False,
     deadline = time.time() + minutes * 60
     worst = 0
     processed = 0
-    while True:
+    # 時計が進まない等の異常でループが張り付かないよう反復回数にも上限を置く
+    max_iters = minutes * 60 // interval + 2
+    while processed < max_iters:
         try:
             rc = process_tick(root, cfg, force=force and processed == 0, no_git=no_git)
         except StoreError as exc:                   # push 失敗など。次のティックは試す

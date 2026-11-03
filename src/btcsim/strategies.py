@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
-from . import candles, indicators
+from . import candles, indicators, ticks as tickmod
 
 
 @dataclass
@@ -25,13 +25,15 @@ class Signal:
     reason: str
     order_pct: Decimal = Decimal(0)
     note: str = ""
+    order_jpy: Decimal | None = None   # 金額指定で買う戦略用（E）。None なら order_pct
+    exit_kind: str = ""                # "take_profit" | "stop_loss" | "timeout" | "trend_reversal"
 
 
 def _hold(reason: str) -> Signal:
     return Signal(action="HOLD", key="", reason=reason)
 
 
-def strategy_a(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf) -> Signal:
+def strategy_a(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf, ctx: dict | None = None) -> Signal:
     p = cfg["strategies"]["A_ma_cross"]
     tf = p["timeframe"]
     cb = candles.closed_bars(bars.get(tf, []), now_ts, tf)
@@ -52,7 +54,7 @@ def strategy_a(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf
     return _hold(f"no cross (short={s_now:.0f}, long={l_now:.0f})")
 
 
-def strategy_b(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf) -> Signal:
+def strategy_b(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf, ctx: dict | None = None) -> Signal:
     p = cfg["strategies"]["B_rsi_reversal"]
     tf = p["timeframe"]
     period = int(p["rsi_period"])
@@ -72,7 +74,7 @@ def strategy_b(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf
     return _hold(f"RSI={r_now:.2f} (no crossing)")
 
 
-def strategy_c(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf) -> Signal:
+def strategy_c(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf, ctx: dict | None = None) -> Signal:
     p = cfg["strategies"]["C_combo"]
     ttf, etf = p["trend_timeframe"], p["entry_timeframe"]
     period = int(p["rsi_period"])
@@ -98,7 +100,7 @@ def strategy_c(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf
     return _hold(f"trend={trend_txt}, RSI={r_now:.2f}")
 
 
-def strategy_d(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf) -> Signal:
+def strategy_d(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf, ctx: dict | None = None) -> Signal:
     """開始時に一括購入し、以後は何もしない比較用ベンチマーク。"""
     p = cfg["strategies"]["D_buy_and_hold"]
     if pf.bootstrapped or pf.btc > 0:
@@ -106,9 +108,93 @@ def strategy_d(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf
     return Signal("BUY", "D:initial", "initial buy & hold allocation", p["allocation_pct"], note="benchmark")
 
 
+def strategy_e(cfg: dict, bars: dict[str, list[dict[str, Any]]], now_ts: int, pf,
+               ctx: dict | None = None) -> Signal:
+    """E: 短期モメンタム（数十分〜数時間の順張りスキャルピング）。
+
+    ローソク足ではなく 10 分ごとのティック列から実時間の変化率を計算する。
+    エントリー条件（すべて満たしたとき買い）:
+      1. 直近 lookback_short_minutes の上昇率 >= entry_momentum_pct
+      2. 直近 lookback_long_minutes の変化率 > entry_long_momentum_pct
+      3. 現在のスプレッドが entry_max_spread_pct 以内
+      4. BTC を保有していない（同時 1 ポジション）
+      5. 直近の売却から cooldown_minutes 以上経過（決済直後の再購入禁止）
+    エグジット条件（いずれか）:
+      利確 +take_profit_pct / 損切り -stop_loss_pct /
+      最大保有 max_hold_minutes 超過 / 短期トレンド反転（短期変化率 <= trend_reversal_pct）
+    判定価格は「評価時点で売れる価格（best_bid）」を使い、実際の約定は
+    その時点の板を歩いた VWAP + スリッページで行う（指値どおりの約定は仮定しない）。
+    データ不足・ティック欠落時は一切売買しない。
+    """
+    p = cfg["strategies"]["E_short_momentum"]
+    ctx = ctx or {}
+    series: list[dict[str, Any]] = ctx.get("ticks") or []
+    bid: Decimal | None = ctx.get("best_bid")
+    spread_pct: Decimal | None = ctx.get("spread_pct")
+
+    short_min = int(p["lookback_short_minutes"])
+    long_min = int(p["lookback_long_minutes"])
+
+    # --- 保有中: エグジット判定を最優先（データ不足でも時間切れは効かせる） ---
+    if pf.btc > 0 and pf.position_entry_price:
+        entry = Decimal(str(pf.position_entry_price))
+        held_min = (now_ts - int(pf.position_entry_ts or now_ts)) / 60
+        key = f"E:exit:{pf.position_entry_ts}"
+        change = (bid - entry) / entry if (bid and entry > 0) else None
+        if change is not None and change >= p["take_profit_pct"]:
+            return Signal("SELL", f"{key}:tp", f"take profit: {change:+.2%} (entry {entry:.0f} -> bid {bid:.0f})",
+                          exit_kind="take_profit")
+        if change is not None and change <= -p["stop_loss_pct"]:
+            return Signal("SELL", f"{key}:sl", f"stop loss: {change:+.2%} (entry {entry:.0f} -> bid {bid:.0f})",
+                          exit_kind="stop_loss")
+        if held_min >= int(p["max_hold_minutes"]):
+            return Signal("SELL", f"{key}:timeout", f"max hold {held_min:.0f}min reached ({change:+.2%})"
+                          if change is not None else f"max hold {held_min:.0f}min reached",
+                          exit_kind="timeout")
+        mom_s = tickmod.change_pct(series, now_ts, short_min)
+        if mom_s is not None and mom_s <= p["trend_reversal_pct"]:
+            return Signal("SELL", f"{key}:rev", f"trend reversal: {short_min}min {mom_s:+.2%}",
+                          exit_kind="trend_reversal")
+        return _hold(f"holding {held_min:.0f}min, pnl {change:+.2%}" if change is not None
+                     else f"holding {held_min:.0f}min")
+
+    if pf.btc > 0:          # 想定外（建値不明）なので何もしない
+        return _hold("holding without entry price record; no action")
+
+    # --- 未保有: エントリー判定 ---
+    covered = tickmod.covered_minutes(series, now_ts)
+    if covered < long_min:
+        return _hold(f"warmup: tick history {covered:.0f}min/{long_min}min")
+    gap = tickmod.max_gap_minutes(series, now_ts, long_min)
+    if gap > int(p["max_data_gap_minutes"]):
+        return _hold(f"data gap {gap:.0f}min > {p['max_data_gap_minutes']}min; no trade")
+
+    cooldown = int(p["cooldown_minutes"])
+    if pf.last_exit_ts and (now_ts - int(pf.last_exit_ts)) / 60 < cooldown:
+        left = cooldown - (now_ts - int(pf.last_exit_ts)) / 60
+        return _hold(f"cooldown {left:.0f}min left after last exit")
+
+    mom_s = tickmod.change_pct(series, now_ts, short_min)
+    mom_l = tickmod.change_pct(series, now_ts, long_min)
+    if mom_s is None or mom_l is None:
+        return _hold("momentum unavailable (reference tick missing)")
+    if spread_pct is not None and spread_pct > p["entry_max_spread_pct"]:
+        return _hold(f"spread {spread_pct:.3%} > {p['entry_max_spread_pct']:.3%}; no trade")
+    if mom_s < p["entry_momentum_pct"]:
+        return _hold(f"{short_min}min momentum {mom_s:+.2%} < {p['entry_momentum_pct']:+.2%}")
+    if mom_l <= p["entry_long_momentum_pct"]:
+        return _hold(f"{long_min}min change {mom_l:+.2%} not positive")
+
+    bucket = candles.bucket_start(now_ts, 10)
+    return Signal("BUY", f"E:entry:{bucket}",
+                  f"momentum {short_min}min {mom_s:+.2%}, {long_min}min {mom_l:+.2%}",
+                  order_jpy=p["order_jpy"])
+
+
 REGISTRY = {
     "A_ma_cross": strategy_a,
     "B_rsi_reversal": strategy_b,
     "C_combo": strategy_c,
     "D_buy_and_hold": strategy_d,
+    "E_short_momentum": strategy_e,
 }

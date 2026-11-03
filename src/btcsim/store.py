@@ -109,20 +109,26 @@ class Store:
             raise StoreError(f"state.json を書けません: {exc}") from exc
 
     # --- 派生ファイル（人間/外部ツール向け。正本は state.json） ---
+    @staticmethod
+    def _union_fields(rows: list[dict[str, Any]]) -> list[str]:
+        """全行のキーの和集合（出現順）。古い記録と新しい記録が混在しても落ちない。"""
+        fields: list[str] = []
+        for row in rows:
+            for k in row:
+                if k not in fields:
+                    fields.append(k)
+        return fields
+
     def export_csv(self) -> None:
         self.state_dir.mkdir(parents=True, exist_ok=True)
-        trades = self.state.get("trades", [])
-        if trades:
-            with self.trades_csv.open("w", newline="", encoding="utf-8") as f:
-                w = csv.DictWriter(f, fieldnames=list(trades[0].keys()))
+        for rows, path in ((self.state.get("trades", []), self.trades_csv),
+                           (self.state.get("ticks", []), self.market_csv)):
+            if not rows:
+                continue
+            with path.open("w", newline="", encoding="utf-8") as f:
+                w = csv.DictWriter(f, fieldnames=self._union_fields(rows), restval="")
                 w.writeheader()
-                w.writerows(trades)
-        ticks = self.state.get("ticks", [])
-        if ticks:
-            with self.market_csv.open("w", newline="", encoding="utf-8") as f:
-                w = csv.DictWriter(f, fieldnames=list(ticks[0].keys()))
-                w.writeheader()
-                w.writerows(ticks)
+                w.writerows(rows)
 
     # --- 冪等性 ---
     def is_tick_processed(self, tick_id: str) -> bool:

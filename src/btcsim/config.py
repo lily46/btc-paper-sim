@@ -16,6 +16,9 @@ _DECIMAL_KEYS = {
     "min_order_size_btc", "min_jpy_reserve", "max_price_jump_pct",
     "min_price_jpy", "max_price_jpy", "max_spread_pct",
     "order_pct", "buy_below", "sell_above", "allocation_pct",
+    # 戦略 E（短期モメンタム）
+    "entry_momentum_pct", "entry_long_momentum_pct", "entry_max_spread_pct",
+    "order_jpy", "take_profit_pct", "stop_loss_pct", "trend_reversal_pct",
 }
 
 

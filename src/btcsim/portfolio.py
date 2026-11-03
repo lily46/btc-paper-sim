@@ -6,7 +6,7 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field, fields
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
 from typing import Any
 
@@ -55,6 +55,12 @@ class Trade:
     equity_after: str
     signal_key: str
     reason: str
+    spread_pct: str = ""          # 約定判定時のスプレッド
+    slippage_pct: str = ""        # best 価格からの乖離（板歩き + スリッページ）
+    hold_minutes: str = ""        # 売却時のみ: 保有時間
+    entry_reason: str = ""        # 売却時のみ: その建玉のエントリー理由
+    exit_kind: str = ""           # 売却時のみ: take_profit / stop_loss / timeout / trend_reversal
+    entry_price: str = ""         # 売却時のみ: 建値
 
 
 @dataclass
@@ -77,6 +83,12 @@ class Portfolio:
     halt_reason: str = ""
     last_signal_key: str = ""
     bootstrapped: bool = False
+    # --- ポジション情報（戦略 E の利確/損切り/時間切れ判定に使う） ---
+    position_entry_ts: int | None = None
+    position_entry_price: str | None = None
+    position_entry_reason: str = ""
+    last_exit_ts: int | None = None
+    hold_minutes_total: str = "0"      # 平均保有時間の算出用（決済の合計保有分）
 
     # --- 評価 ---
     def equity(self, mark_price: Decimal) -> Decimal:
@@ -104,6 +116,7 @@ class Portfolio:
     def buy(
         self, *, ts: str, notional_jpy: Decimal, asks: list[tuple[Decimal, Decimal]],
         mark_price: Decimal, cfg: dict, signal_key: str, reason: str,
+        now_ts: int | None = None, spread_pct: Decimal | None = None,
     ) -> Trade | None:
         risk, fees = cfg["risk"], cfg["fees"]
         fee_rate = fees["taker_fee_rate"]
@@ -143,16 +156,25 @@ class Portfolio:
         self.trades += 1
         self.buys += 1
         self.last_signal_key = signal_key
+        if btc_before == 0:                      # 新規建玉
+            self.position_entry_ts = now_ts
+            self.position_entry_price = str(price)
+            self.position_entry_reason = reason
+        slip = (price / asks[0][0] - Decimal(1)) if asks and asks[0][0] > 0 else Decimal(0)
         return Trade(
             ts=ts, strategy=self.strategy_id, side="BUY", price=str(price), size=str(size),
             gross_jpy=str(gross), fee_jpy=str(fee), jpy_before=str(jpy_before), jpy_after=str(self.jpy),
             btc_before=str(btc_before), btc_after=str(self.btc), realized_pnl="0",
             equity_after=str(self.equity(mark_price)), signal_key=signal_key, reason=reason,
+            spread_pct=str(spread_pct) if spread_pct is not None else "",
+            slippage_pct=str(slip), entry_price=str(price),
         )
 
     def sell(
         self, *, ts: str, size_btc: Decimal, bids: list[tuple[Decimal, Decimal]],
         mark_price: Decimal, cfg: dict, signal_key: str, reason: str,
+        now_ts: int | None = None, spread_pct: Decimal | None = None,
+        exit_kind: str = "",
     ) -> Trade | None:
         risk, fees = cfg["risk"], cfg["fees"]
         fee_rate = fees["taker_fee_rate"]
@@ -175,6 +197,11 @@ class Portfolio:
         realized = q_jpy(proceeds - released_cost)
 
         jpy_before, btc_before = self.jpy, self.btc
+        entry_price = self.position_entry_price or ""
+        entry_reason = self.position_entry_reason
+        held_min = ""
+        if now_ts is not None and self.position_entry_ts:
+            held_min = str(round((now_ts - int(self.position_entry_ts)) / 60, 2))
         self.jpy += proceeds
         self.btc -= size
         self.cost_basis_jpy = max(Decimal(0), self.cost_basis_jpy - released_cost)
@@ -189,11 +216,22 @@ class Portfolio:
         elif realized < 0:
             self.losses += 1
         self.last_signal_key = signal_key
+        if self.btc == 0:                        # 建玉を完全に閉じた
+            if held_min:
+                self.hold_minutes_total = str(Decimal(self.hold_minutes_total) + Decimal(held_min))
+            self.last_exit_ts = now_ts
+            self.position_entry_ts = None
+            self.position_entry_price = None
+            self.position_entry_reason = ""
+        slip = (Decimal(1) - price / bids[0][0]) if bids and bids[0][0] > 0 else Decimal(0)
         return Trade(
             ts=ts, strategy=self.strategy_id, side="SELL", price=str(price), size=str(size),
             gross_jpy=str(gross), fee_jpy=str(fee), jpy_before=str(jpy_before), jpy_after=str(self.jpy),
             btc_before=str(btc_before), btc_after=str(self.btc), realized_pnl=str(realized),
             equity_after=str(self.equity(mark_price)), signal_key=signal_key, reason=reason,
+            spread_pct=str(spread_pct) if spread_pct is not None else "",
+            slippage_pct=str(slip), hold_minutes=held_min, entry_reason=entry_reason,
+            exit_kind=exit_kind, entry_price=str(entry_price),
         )
 
     # --- 永続化 ---
@@ -203,7 +241,20 @@ class Portfolio:
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "Portfolio":
+        """旧バージョンの state（戦略 E 追加前）も読めるようにする。
+
+        * 新しく増えたフィールドが無ければ dataclass の既定値を使う
+        * 知らないフィールドが残っていても無視する
+        """
         dec = {"initial_jpy", "jpy", "btc", "cost_basis_jpy", "realized_pnl",
                "fees_paid", "peak_equity", "max_drawdown"}
-        kwargs = {k: (Decimal(str(v)) if k in dec else v) for k, v in d.items()}
+        known = {f.name for f in fields(cls)}
+        kwargs = {k: (Decimal(str(v)) if k in dec else v)
+                  for k, v in d.items() if k in known}
         return cls(**kwargs)
+
+    def avg_hold_minutes(self) -> Decimal | None:
+        """決済済み建玉の平均保有時間（分）。決済ゼロなら None。"""
+        if not self.sells:
+            return None
+        return Decimal(self.hold_minutes_total) / Decimal(self.sells)

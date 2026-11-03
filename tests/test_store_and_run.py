@@ -98,12 +98,13 @@ def test_first_run_initializes_and_buys_bh(tmp_path, cfg_nb, fake_market):
     exp = st["experiment"]
     assert exp["status"] == "running"
     assert int(exp["ends_ts"]) - int(exp["started_ts"]) == 168 * 3600
-    assert set(st["portfolios"]) == {"A_ma_cross", "B_rsi_reversal", "C_combo", "D_buy_and_hold"}
+    assert set(st["portfolios"]) == {"A_ma_cross", "B_rsi_reversal", "C_combo",
+                                     "D_buy_and_hold", "E_short_momentum"}
     bh = st["portfolios"]["D_buy_and_hold"]
     assert Decimal(bh["btc"]) > 0
     assert Decimal(bh["jpy"]) < Decimal("1000000")
-    # ウォームアップ中なので A/B/C は売買しない
-    for sid in ("A_ma_cross", "B_rsi_reversal", "C_combo"):
+    # ウォームアップ中なので A/B/C/E は売買しない
+    for sid in ("A_ma_cross", "B_rsi_reversal", "C_combo", "E_short_momentum"):
         assert st["portfolios"][sid]["trades"] == 0
         assert Decimal(st["portfolios"][sid]["jpy"]) == Decimal("1000000")
     assert (tmp_path / "docs" / "data.json").exists()
@@ -164,6 +165,8 @@ def test_experiment_end_stops_trading_and_writes_report(tmp_path, cfg_nb, fake_m
     st_path = tmp_path / "state" / "state.json"
     st = json.loads(st_path.read_text(encoding="utf-8"))
     st["experiment"]["ends_ts"] = 1            # 既に終了済み扱い
+    for win in st["strategy_windows"].values():
+        win["ends_ts"] = 1                     # 戦略 E も含めて全期間を終了扱いにする
     st_path.write_text(json.dumps(st), encoding="utf-8")
 
     assert run.process_tick(tmp_path, cfg_nb, force=True) == 0
@@ -342,6 +345,8 @@ def test_loop_stops_when_experiment_finished(tmp_path, cfg_nb, fake_market, monk
     st_path = tmp_path / "state" / "state.json"
     st = json.loads(st_path.read_text(encoding="utf-8"))
     st["experiment"]["ends_ts"] = 1
+    for win in st["strategy_windows"].values():
+        win["ends_ts"] = 1
     st_path.write_text(json.dumps(st), encoding="utf-8")
 
     slept = []

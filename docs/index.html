@@ -8,7 +8,7 @@
   :root{
     --bg:#0f1115; --panel:#171a21; --line:#272b36; --fg:#e8eaf0; --muted:#98a0b0;
     --pos:#35b37e; --neg:#e5484d; --accent:#5b8def;
-    --sA:#5b8def; --sB:#e8a33d; --sC:#9d7bea; --sD:#6c7686;
+    --sA:#5b8def; --sB:#e8a33d; --sC:#9d7bea; --sD:#6c7686; --sE:#35b37e;
   }
   @media (prefers-color-scheme: light){
     :root{ --bg:#f7f8fa; --panel:#fff; --line:#e3e6ec; --fg:#15181f; --muted:#5c6473; }
@@ -29,7 +29,10 @@
   .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
   .big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
   .kv{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
-  .kv span:first-child{color:var(--muted)}
+  .kv span:first-child{color:var(--muted);white-space:nowrap}
+  .kv.reason{display:block}
+  .kv.reason b{display:block;font-weight:400;color:var(--muted);font-size:12px;
+    margin-top:2px;font-variant-numeric:normal}
   .pos{color:var(--pos)} .neg{color:var(--neg)}
   table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
   th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
@@ -63,6 +66,10 @@
   <svg id="equityChart" role="img" aria-label="戦略別資産推移"></svg>
   <div class="legend" id="equityLegend"></div>
 
+  <h2>共通期間での比較（開始日が違う戦略を公平に比べる）</h2>
+  <div id="commonNote" class="meta"></div>
+  <div class="scroll"><table id="common"></table></div>
+
   <h2>戦略別 指標一覧</h2>
   <div class="scroll"><table id="table"></table></div>
 
@@ -77,8 +84,10 @@
   </footer>
 </div>
 <script>
-const SC = {A_ma_cross:"var(--sA)", B_rsi_reversal:"var(--sB)", C_combo:"var(--sC)", D_buy_and_hold:"var(--sD)"};
-const LBL = {A_ma_cross:"A 移動平均クロス", B_rsi_reversal:"B RSI逆張り", C_combo:"C 複合", D_buy_and_hold:"D Buy & Hold"};
+const SC = {A_ma_cross:"var(--sA)", B_rsi_reversal:"var(--sB)", C_combo:"var(--sC)",
+            D_buy_and_hold:"var(--sD)", E_short_momentum:"var(--sE)"};
+const LBL = {A_ma_cross:"A 移動平均クロス", B_rsi_reversal:"B RSI逆張り", C_combo:"C 複合",
+             D_buy_and_hold:"D Buy & Hold", E_short_momentum:"E 短期モメンタム"};
 const yen = n => (Number(n)).toLocaleString("ja-JP",{maximumFractionDigits:0});
 const sgn = n => Number(n) >= 0 ? "pos" : "neg";
 const el = (h) => { const t=document.createElement("template"); t.innerHTML=h.trim(); return t.content.firstChild; };
@@ -155,7 +164,14 @@ function render(d){
       <div class="kv"><span>累計手数料</span><b>¥${yen(r.fees_jpy)}</b></div>
       <div class="kv"><span>最大DD</span><b>${r.max_drawdown_pct} %</b></div>
       <div class="kv"><span>B&H差</span><b class="${sgn(r.vs_buy_and_hold_jpy ?? 0)}">${yen(r.vs_buy_and_hold_jpy ?? 0)} 円</b></div>
+      ${r.win_rate_pct ? `<div class="kv"><span>勝率</span><b>${r.win_rate_pct} %（決済${r.closed_trades}件）</b></div>` : ""}
+      ${r.avg_hold_minutes ? `<div class="kv"><span>平均保有</span><b>${r.avg_hold_minutes} 分</b></div>` : ""}
+      ${r.own_window ? `<div class="kv"><span>開始</span><b>${r.started_at_jst ?? "-"}</b></div>
+      <div class="kv"><span>残り時間</span><b>${r.remaining_human ?? "-"}</b></div>` : ""}
+      ${r.window_status === "finished" ? `<div class="kv"><span>期間</span><b>終了（${r.window_finished_at_jst ?? "-"}）</b></div>` : ""}
+      ${r.open_position ? `<div class="kv"><span>建値</span><b>¥${yen(r.position_entry_price ?? 0)}</b></div>` : ""}
       ${r.halted ? `<div class="kv"><span>停止</span><b class="neg">${r.halt_reason}</b></div>` : ""}
+      ${r.last_reason ? `<div class="kv reason"><span>直近の判断</span><b>${r.last_reason}</b></div>` : ""}
     `, SC[sid]);
   }).join("");
 
@@ -167,8 +183,9 @@ function render(d){
 
   const cols = [["strategy","戦略"],["equity_jpy","総資産"],["total_pnl_jpy","損益"],["total_pnl_pct","損益率%"],
     ["jpy_balance","JPY"],["btc_balance","BTC"],["realized_pnl_jpy","実現"],["unrealized_pnl_jpy","評価"],
-    ["trades","回数"],["closed_trades","決済数"],["win_rate_pct","勝率%"],["fees_jpy","手数料"],
-    ["max_drawdown_pct","最大DD%"],["vs_buy_and_hold_jpy","B&H差"]];
+    ["trades","回数"],["closed_trades","決済数"],["win_rate_pct","勝率%"],
+    ["breakeven_win_rate_pct","損益分岐勝率%"],["avg_hold_minutes","平均保有(分)"],
+    ["fees_jpy","手数料"],["max_drawdown_pct","最大DD%"],["vs_buy_and_hold_jpy","B&H差"]];
   document.getElementById("table").innerHTML =
     `<thead><tr>${cols.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody>` +
     ids.map(sid=>`<tr>${cols.map(c=>{
@@ -176,9 +193,33 @@ function render(d){
       return `<td>${v===null||v===undefined?"-":(typeof v==="boolean"?v: (c[0]==="btc_balance"?Number(v).toFixed(8):(isNaN(Number(v))?v:(String(c[0]).includes("pct")?v:yen(v)))))}</td>`;
     }).join("")}</tr>`).join("") + `</tbody>`;
 
+  const cp = d.common_period || {};
+  const cpNote = document.getElementById("commonNote");
+  const cpTable = document.getElementById("common");
+  if (cp.available) {
+    cpNote.innerHTML = `<div>対象期間: <b>${cp.from_jst}</b> 〜 <b>${cp.to_jst}</b>（${cp.hours} 時間）</div>
+      <div>同期間のBTC騰落率: <b class="${sgn(cp.btc_change_pct)}">${cp.btc_change_pct} %</b></div>`;
+    const ccols = [["strategy","戦略"],["start_equity_jpy","期間開始"],["end_equity_jpy","現在"],
+                   ["pnl_jpy","期間損益"],["pnl_pct","期間損益率%"],["vs_buy_and_hold_jpy","B&H差"]];
+    cpTable.innerHTML = `<thead><tr>${ccols.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody>` +
+      Object.keys(cp.strategies).sort().map(sid=>{
+        const r = cp.strategies[sid];
+        return `<tr><td><span class="dot" style="background:${SC[sid]}"></span> ${LBL[sid] ?? sid}</td>` +
+          ccols.slice(1).map(c=>{
+            const v = r[c[0]];
+            if (v === undefined || v === null) return "<td>-</td>";
+            return `<td class="${c[0].includes("pnl")||c[0].includes("vs_")?sgn(v):""}">${c[0].includes("pct")?v:yen(v)}</td>`;
+          }).join("") + "</tr>";
+      }).join("") + "</tbody>";
+  } else {
+    cpNote.textContent = "共通期間のデータがまだ足りません。";
+    cpTable.innerHTML = "";
+  }
+
   const tcols = [["ts","時刻(JST)"],["strategy","戦略"],["side","売買"],["price","価格"],["size","数量"],
-    ["gross_jpy","約定金額"],["fee_jpy","手数料"],["realized_pnl","実現損益"],["jpy_after","JPY残高"],
-    ["btc_after","BTC残高"],["equity_after","総資産"],["reason","根拠"]];
+    ["gross_jpy","約定金額"],["fee_jpy","手数料"],["realized_pnl","実現損益"],["hold_minutes","保有(分)"],
+    ["exit_kind","決済理由"],["jpy_after","JPY残高"],["btc_after","BTC残高"],["equity_after","総資産"],
+    ["reason","根拠"]];
   const trades = (d.trades||[]).slice().reverse();
   document.getElementById("trades").innerHTML =
     `<thead><tr>${tcols.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody>` +
@@ -186,7 +227,8 @@ function render(d){
       const v = t[c[0]];
       if(c[0]==="side") return `<td class="${v==="BUY"?"pos":"neg"}"><b>${v}</b></td>`;
       if(c[0]==="size"||c[0]==="btc_after") return `<td>${Number(v).toFixed(8)}</td>`;
-      if(c[0]==="ts"||c[0]==="strategy"||c[0]==="reason") return `<td>${v??""}</td>`;
+      if(c[0]==="ts"||c[0]==="strategy"||c[0]==="reason"||c[0]==="exit_kind") return `<td>${v??""}</td>`;
+      if(c[0]==="hold_minutes") return `<td>${v ? Number(v).toFixed(0) : "-"}</td>`;
       return `<td>${yen(v)}</td>`;
     }).join("")}</tr>`).join("") : `<tr><td colspan="${tcols.length}">まだ仮想売買は発生していません。</td></tr>`) + `</tbody>`;
 }
