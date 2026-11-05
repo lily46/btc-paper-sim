@@ -42,13 +42,13 @@
   "B_rsi_reversal": {
    "strategy_id": "B_rsi_reversal",
    "initial_jpy": "1000000",
-   "jpy": "1013044.9807",
-   "btc": "0E-8",
-   "cost_basis_jpy": "0",
+   "jpy": "812745.0814",
+   "btc": "0.01616605",
+   "cost_basis_jpy": "200299.8993",
    "realized_pnl": "13044.9807",
-   "fees_paid": "1221.3993",
-   "trades": 3,
-   "buys": 2,
+   "fees_paid": "1521.3991",
+   "trades": 4,
+   "buys": 3,
    "sells": 1,
    "wins": 1,
    "losses": 0,
@@ -56,11 +56,11 @@
    "max_drawdown": "0.009643742452800911403938430848",
    "halted": false,
    "halt_reason": "",
-   "last_signal_key": "B:30m:1793802600:SELL",
+   "last_signal_key": "B:30m:1793889000:BUY",
    "bootstrapped": false,
-   "position_entry_ts": null,
-   "position_entry_price": null,
-   "position_entry_reason": "",
+   "position_entry_ts": 1793890802,
+   "position_entry_price": "12371599.7085",
+   "position_entry_reason": "RSI entered oversold (19.65)",
    "last_exit_ts": 1793804402,
    "hold_minutes_total": "0"
   },
@@ -103,7 +103,7 @@
    "wins": 0,
    "losses": 0,
    "peak_equity": "1042740.0672",
-   "max_drawdown": "0.03271089214651386187543578917",
+   "max_drawdown": "0.03437054307909882145554903254",
    "halted": false,
    "halt_reason": "",
    "last_signal_key": "D:initial",
@@ -2421,9 +2421,17 @@
     "ts": 1793889000,
     "o": "12591727.0",
     "h": "12604962.0",
-    "l": "12447313.0",
-    "c": "12447313.0",
-    "v": "22.45582389"
+    "l": "12318287.0",
+    "c": "12364603.0",
+    "v": "29.90099410"
+   },
+   {
+    "ts": 1793890800,
+    "o": "12361294.0",
+    "h": "12361294.0",
+    "l": "12361294.0",
+    "c": "12361294.0",
+    "v": "0"
    }
   ],
   "1h": [
@@ -3565,9 +3573,17 @@
     "ts": 1793887200,
     "o": "12606151.0",
     "h": "12619083.0",
-    "l": "12447313.0",
-    "c": "12447313.0",
-    "v": "30.91322124"
+    "l": "12318287.0",
+    "c": "12364603.0",
+    "v": "38.35839145"
+   },
+   {
+    "ts": 1793890800,
+    "o": "12361294.0",
+    "h": "12361294.0",
+    "l": "12361294.0",
+    "c": "12361294.0",
+    "v": "0"
    }
   ]
  },
@@ -9176,6 +9192,19 @@
    "best_bid_size": "0.001",
    "best_ask_size": "0.07163907",
    "source": "bitflyer:getticker"
+  },
+  {
+   "tick_id": "1793890800",
+   "ts": 1793890802,
+   "fetched_at_jst": "2026-11-06T00:00:02+09:00",
+   "fetched_at_utc": "2026-11-05T15:00:02+00:00",
+   "exchange_timestamp": "2026-11-05T15:00:01.69",
+   "ltp": "12361294.0",
+   "best_bid": "12356714.0",
+   "best_ask": "12365411.0",
+   "best_bid_size": "0.06356131",
+   "best_ask_size": "0.0305",
+   "source": "bitflyer:getticker"
   }
  ],
  "equity_history": [
@@ -14346,6 +14375,18 @@
     "D_buy_and_hold": "1014259.4530",
     "E_short_momentum": "995532.4722"
    }
+  },
+  {
+   "ts": 1793890802,
+   "jst": "2026-11-06T00:00:02+09:00",
+   "price": "12361294.0",
+   "equity": {
+    "A_ma_cross": "1000887.9426",
+    "B_rsi_reversal": "1012504.3378",
+    "C_combo": "996744.2017",
+    "D_buy_and_hold": "1006900.5248",
+    "E_short_momentum": "995532.4722"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -14785,7 +14826,8 @@
   "1793888400",
   "1793889000",
   "1793889600",
-  "1793890200"
+  "1793890200",
+  "1793890800"
  ],
  "trades": [
   {
@@ -15902,35 +15944,58 @@
    "entry_reason": "momentum 30min +0.32%, 60min +0.17%",
    "exit_kind": "stop_loss",
    "entry_price": "12651755.7165"
+  },
+  {
+   "ts": "2026-11-06T00:00:02+09:00",
+   "strategy": "B_rsi_reversal",
+   "side": "BUY",
+   "price": "12371599.7085",
+   "size": "0.01616605",
+   "gross_jpy": "199999.8995",
+   "fee_jpy": "299.9998",
+   "jpy_before": "1013044.9807",
+   "jpy_after": "812745.0814",
+   "btc_before": "0E-8",
+   "btc_after": "0.01616605",
+   "realized_pnl": "0",
+   "equity_after": "1012504.3378",
+   "signal_key": "B:30m:1793889000:BUY",
+   "reason": "RSI entered oversold (19.65)",
+   "spread_pct": "0.0007038278946975708914198386399",
+   "slippage_pct": "0.0005",
+   "hold_minutes": "",
+   "entry_reason": "",
+   "exit_kind": "",
+   "entry_price": "12371599.7085"
   }
  ],
  "stats": {
-  "runs": 451,
+  "runs": 452,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 14,
   "missed_schedules": 4,
-  "expected_ticks": 441,
-  "observed_ticks": 437
+  "expected_ticks": 442,
+  "observed_ticks": 438
  },
  "last_run": {
-  "tick_id": "1793890200",
-  "at_jst": "2026-11-05T23:50:02+09:00",
+  "tick_id": "1793890800",
+  "at_jst": "2026-11-06T00:00:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
     "action": "HOLD",
-    "reason": "no cross (short=12634854, long=12697579)",
+    "reason": "no cross (short=12575710, long=12683004)",
     "executed": false
    },
    "B_rsi_reversal": {
-    "action": "HOLD",
-    "reason": "RSI=34.94 (no crossing)",
-    "executed": false
+    "action": "BUY",
+    "reason": "RSI entered oversold (19.65)",
+    "executed": true
    },
    "C_combo": {
     "action": "HOLD",
-    "reason": "trend=down, RSI=34.94",
+    "reason": "trend=down, RSI=19.65",
     "executed": false
    },
    "D_buy_and_hold": {
@@ -15940,11 +16005,11 @@
    },
    "E_short_momentum": {
     "action": "HOLD",
-    "reason": "30min momentum -1.05% < +0.25%",
+    "reason": "30min momentum -1.83% < +0.25%",
     "executed": false
    }
   },
-  "trades": 0,
+  "trades": 1,
   "strategies_added": []
  },
  "strategy_windows": {
