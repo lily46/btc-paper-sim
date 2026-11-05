@@ -117,13 +117,13 @@
   "E_short_momentum": {
    "strategy_id": "E_short_momentum",
    "initial_jpy": "1000000",
-   "jpy": "993994.2204",
-   "btc": "0E-8",
-   "cost_basis_jpy": "0",
+   "jpy": "893844.3348",
+   "btc": "0.00835468",
+   "cost_basis_jpy": "100149.8856",
    "realized_pnl": "-6005.7796",
-   "fees_paid": "5399.0871",
-   "trades": 36,
-   "buys": 18,
+   "fees_paid": "5549.0869",
+   "trades": 37,
+   "buys": 19,
    "sells": 18,
    "wins": 5,
    "losses": 13,
@@ -131,11 +131,11 @@
    "max_drawdown": "0.006637262378367820581883673327",
    "halted": false,
    "halt_reason": "",
-   "last_signal_key": "E:exit:1793903402:rev",
+   "last_signal_key": "E:entry:1793922600",
    "bootstrapped": false,
-   "position_entry_ts": null,
-   "position_entry_price": null,
-   "position_entry_reason": "",
+   "position_entry_ts": 1793922602,
+   "position_entry_price": "11969325.6720",
+   "position_entry_reason": "momentum 30min +0.80%, 60min +0.22%",
    "last_exit_ts": 1793910002,
    "hold_minutes_total": "1620.0"
   }
@@ -2559,15 +2559,15 @@
     "h": "11954245.0",
     "l": "11841000.0",
     "c": "11933138.0",
-    "v": "30.64952432"
+    "v": "31.33228855"
    },
    {
     "ts": 1793921400,
     "o": "11926841.0",
-    "h": "11960759.0",
+    "h": "11974584.0",
     "l": "11918981.0",
-    "c": "11937424.0",
-    "v": "6.81354360"
+    "c": "11961685.0",
+    "v": "18.35422125"
    }
   ],
   "1h": [
@@ -3780,10 +3780,10 @@
    {
     "ts": 1793919600,
     "o": "11937834.0",
-    "h": "11960759.0",
+    "h": "11974584.0",
     "l": "11841000.0",
-    "c": "11937424.0",
-    "v": "37.46306792"
+    "c": "11961685.0",
+    "v": "49.68650980"
    }
   ]
  },
@@ -10081,6 +10081,19 @@
    "best_bid_size": "0.0050507",
    "best_ask_size": "0.0012088",
    "source": "bitflyer:getticker"
+  },
+  {
+   "tick_id": "1793922600",
+   "ts": 1793922602,
+   "fetched_at_jst": "2026-11-06T08:50:02+09:00",
+   "fetched_at_utc": "2026-11-05T23:50:02+00:00",
+   "exchange_timestamp": "2026-11-05T23:50:01.943",
+   "ltp": "11961685.0",
+   "best_bid": "11960341.0",
+   "best_ask": "11963344.0",
+   "best_bid_size": "0.001146",
+   "best_ask_size": "0.03900958",
+   "source": "bitflyer:getticker"
   }
  ],
  "equity_history": [
@@ -15887,6 +15900,18 @@
     "D_buy_and_hold": "972691.3562",
     "E_short_momentum": "993994.2204"
    }
+  },
+  {
+   "ts": 1793922602,
+   "jst": "2026-11-06T08:50:02+09:00",
+   "price": "11961685.0",
+   "equity": {
+    "A_ma_cross": "1000887.9426",
+    "B_rsi_reversal": "1004161.0612",
+    "C_combo": "996744.2017",
+    "D_buy_and_hold": "974601.6349",
+    "E_short_momentum": "993769.1565"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -16379,7 +16404,8 @@
   "1793920200",
   "1793920800",
   "1793921400",
-  "1793922000"
+  "1793922000",
+  "1793922600"
  ],
  "trades": [
   {
@@ -17680,20 +17706,43 @@
    "entry_reason": "",
    "exit_kind": "",
    "entry_price": "11947252.2935"
+  },
+  {
+   "ts": "2026-11-06T08:50:02+09:00",
+   "strategy": "E_short_momentum",
+   "side": "BUY",
+   "price": "11969325.6720",
+   "size": "0.00835468",
+   "gross_jpy": "99999.8858",
+   "fee_jpy": "149.9998",
+   "jpy_before": "993994.2204",
+   "jpy_after": "893844.3348",
+   "btc_before": "0E-8",
+   "btc_after": "0.00835468",
+   "realized_pnl": "0",
+   "equity_after": "993769.1565",
+   "signal_key": "E:entry:1793922600",
+   "reason": "momentum 30min +0.80%, 60min +0.22%",
+   "spread_pct": "0.0002510797978084404115233838233",
+   "slippage_pct": "0.0005",
+   "hold_minutes": "",
+   "entry_reason": "",
+   "exit_kind": "",
+   "entry_price": "11969325.6720"
   }
  ],
  "stats": {
-  "runs": 506,
+  "runs": 507,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 16,
   "missed_schedules": 4,
-  "expected_ticks": 494,
-  "observed_ticks": 490
+  "expected_ticks": 495,
+  "observed_ticks": 491
  },
  "last_run": {
-  "tick_id": "1793922000",
-  "at_jst": "2026-11-06T08:40:02+09:00",
+  "tick_id": "1793922600",
+  "at_jst": "2026-11-06T08:50:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
@@ -17717,12 +17766,12 @@
     "executed": false
    },
    "E_short_momentum": {
-    "action": "HOLD",
-    "reason": "60min change -0.10% not positive",
-    "executed": false
+    "action": "BUY",
+    "reason": "momentum 30min +0.80%, 60min +0.22%",
+    "executed": true
    }
   },
-  "trades": 0,
+  "trades": 1,
   "strategies_added": []
  },
  "strategy_windows": {
