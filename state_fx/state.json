@@ -43,19 +43,19 @@
   "G_ma_cross_ls": {
    "strategy_id": "G_ma_cross_ls",
    "initial_jpy": "1000000",
-   "collateral_jpy": "1003038.3982",
+   "collateral_jpy": "1003037.8471",
    "position": {
     "side": "SHORT",
     "size": "0.01575382",
     "entry_price": "12688978.3370",
     "entry_ts": 1793878202,
     "entry_reason": "dead cross (short=12710092 long=12710413); long -> short",
-    "swap_paid": "5.5396",
-    "last_swap_ts": 1793884202
+    "swap_paid": "6.0907",
+    "last_swap_ts": 1793884802
    },
    "realized_pnl": "3208.9341",
    "fees_paid": "0.0000",
-   "swap_paid": "170.5359",
+   "swap_paid": "171.0870",
    "trades": 15,
    "opens": 8,
    "closes": 7,
@@ -75,19 +75,19 @@
   "H_long_hold_fx": {
    "strategy_id": "H_long_hold_fx",
    "initial_jpy": "1000000",
-   "collateral_jpy": "998160.0660",
+   "collateral_jpy": "998154.2932",
    "position": {
     "side": "LONG",
     "size": "0.16506735",
     "entry_price": "12116266.2077",
     "entry_ts": 1793690806,
     "entry_reason": "initial leveraged long (benchmark)",
-    "swap_paid": "1839.9340",
-    "last_swap_ts": 1793884202
+    "swap_paid": "1845.7068",
+    "last_swap_ts": 1793884802
    },
    "realized_pnl": "0",
    "fees_paid": "0.0000",
-   "swap_paid": "1839.9340",
+   "swap_paid": "1845.7068",
    "trades": 1,
    "opens": 1,
    "closes": 0,
@@ -1967,8 +1967,8 @@
     "o": "12595768.0",
     "h": "12615083.0",
     "l": "12579559.0",
-    "c": "12586350.0",
-    "v": "6.13195254"
+    "c": "12593064.0",
+    "v": "14.46687192"
    }
   ],
   "1h": [
@@ -2905,8 +2905,8 @@
     "o": "12595768.0",
     "h": "12615083.0",
     "l": "12579559.0",
-    "c": "12586350.0",
-    "v": "6.13195254"
+    "c": "12593064.0",
+    "v": "14.46687192"
    }
   ]
  },
@@ -7122,6 +7122,19 @@
    "best_bid_size": "0.015",
    "best_ask_size": "0.02728666",
    "source": "bitflyer:getticker:FX_BTC_JPY"
+  },
+  {
+   "tick_id": "1793884800",
+   "ts": 1793884802,
+   "fetched_at_jst": "2026-11-05T22:20:02+09:00",
+   "fetched_at_utc": "2026-11-05T13:20:02+00:00",
+   "exchange_timestamp": "2026-11-05T13:20:01.86",
+   "ltp": "12593064.0",
+   "best_bid": "12590140.0",
+   "best_ask": "12592561.0",
+   "best_bid_size": "0.08254172",
+   "best_ask_size": "0.1417416",
+   "source": "bitflyer:getticker:FX_BTC_JPY"
   }
  ],
  "equity_history": [
@@ -10364,6 +10377,16 @@
     "G_ma_cross_ls": "1004641.4335",
     "H_long_hold_fx": "1075208.0235"
    }
+  },
+  {
+   "ts": 1793884802,
+   "jst": "2026-11-05T22:20:02+09:00",
+   "price": "12593064.0",
+   "equity": {
+    "F_momentum_ls": "1000932.7537",
+    "G_ma_cross_ls": "1004556.7885",
+    "H_long_hold_fx": "1076375.3843"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -10690,7 +10713,8 @@
   "1793882400",
   "1793883000",
   "1793883600",
-  "1793884200"
+  "1793884200",
+  "1793884800"
  ],
  "trades": [
   {
@@ -12445,41 +12469,41 @@
   }
  ],
  "stats": {
-  "runs": 333,
+  "runs": 334,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 9,
   "missed_schedules": 0,
-  "expected_ticks": 323,
-  "observed_ticks": 324
+  "expected_ticks": 324,
+  "observed_ticks": 325
  },
  "last_run": {
-  "tick_id": "1793884200",
-  "at_jst": "2026-11-05T22:10:02+09:00",
+  "tick_id": "1793884800",
+  "at_jst": "2026-11-05T22:20:02+09:00",
   "status": "ok",
   "decisions": {
    "F_momentum_ls": {
-    "action": "CLOSE",
-    "reason": "take profit +0.83% (SHORT)",
-    "executed": true,
+    "action": "HOLD",
+    "reason": "cooldown 20min left",
+    "executed": false,
     "side": "",
-    "swap_jpy": "0.5506"
+    "swap_jpy": "0"
    },
    "G_ma_cross_ls": {
     "action": "HOLD",
-    "reason": "holding SHORT, pnl +0.80%",
+    "reason": "holding SHORT, pnl +0.76%",
     "executed": false,
     "side": "",
-    "swap_jpy": "0.5508"
+    "swap_jpy": "0.5511"
    },
    "H_long_hold_fx": {
     "action": "HOLD",
     "reason": "long & hold: holding (no further trades)",
     "executed": false,
     "side": "",
-    "swap_jpy": "5.7696"
+    "swap_jpy": "5.7728"
    }
   },
-  "trades": 1
+  "trades": 0
  }
 }
