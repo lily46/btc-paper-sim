@@ -2791,15 +2791,23 @@
     "h": "12045000.0",
     "l": "11974000.0",
     "c": "12018572.0",
-    "v": "43.82998350"
+    "v": "44.88824148"
    },
    {
     "ts": 1793973600,
     "o": "12018572.0",
     "h": "12024564.0",
     "l": "11950499.0",
-    "c": "11978621.0",
-    "v": "8.46122464"
+    "c": "11975298.0",
+    "v": "16.20153911"
+   },
+   {
+    "ts": 1793975400,
+    "o": "11974812.0",
+    "h": "11974812.0",
+    "l": "11974812.0",
+    "c": "11974812.0",
+    "v": "0.00170312"
    }
   ],
   "1h": [
@@ -4127,15 +4135,15 @@
     "h": "12045000.0",
     "l": "11974000.0",
     "c": "12018572.0",
-    "v": "50.76138626"
+    "v": "51.81964424"
    },
    {
     "ts": 1793973600,
     "o": "12018572.0",
     "h": "12024564.0",
     "l": "11950499.0",
-    "c": "11978621.0",
-    "v": "8.46122464"
+    "c": "11974812.0",
+    "v": "16.20324223"
    }
   ]
  },
@@ -11577,6 +11585,19 @@
    "best_bid_size": "0.001238",
    "best_ask_size": "0.03930548",
    "source": "bitflyer:getticker"
+  },
+  {
+   "tick_id": "1793975400",
+   "ts": 1793975402,
+   "fetched_at_jst": "2026-11-06T23:30:02+09:00",
+   "fetched_at_utc": "2026-11-06T14:30:02+00:00",
+   "exchange_timestamp": "2026-11-06T14:30:02.913",
+   "ltp": "11974812.0",
+   "best_bid": "11970794.0",
+   "best_ask": "11981143.0",
+   "best_bid_size": "0.00507702",
+   "best_ask_size": "0.00454836",
+   "source": "bitflyer:getticker"
   }
  ],
  "equity_history": [
@@ -18439,6 +18460,18 @@
     "D_buy_and_hold": "976158.1823",
     "E_short_momentum": "991911.2365"
    }
+  },
+  {
+   "ts": 1793975402,
+   "jst": "2026-11-06T23:30:02+09:00",
+   "price": "11974812.0",
+   "equity": {
+    "A_ma_cross": "997006.7310",
+    "B_rsi_reversal": "1004853.5228",
+    "C_combo": "996744.2017",
+    "D_buy_and_hold": "975453.4091",
+    "E_short_momentum": "991911.2365"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -19019,7 +19052,8 @@
   "1793973000",
   "1793973600",
   "1793974200",
-  "1793974800"
+  "1793974800",
+  "1793975400"
  ],
  "trades": [
   {
@@ -20576,32 +20610,32 @@
   }
  ],
  "stats": {
-  "runs": 597,
+  "runs": 598,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 19,
   "missed_schedules": 4,
-  "expected_ticks": 582,
-  "observed_ticks": 578
+  "expected_ticks": 583,
+  "observed_ticks": 579
  },
  "last_run": {
-  "tick_id": "1793974800",
-  "at_jst": "2026-11-06T23:20:02+09:00",
+  "tick_id": "1793975400",
+  "at_jst": "2026-11-06T23:30:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
     "action": "HOLD",
-    "reason": "no cross (short=12040420, long=11993282)",
+    "reason": "no cross (short=12030041, long=11991330)",
     "executed": false
    },
    "B_rsi_reversal": {
     "action": "HOLD",
-    "reason": "RSI=48.52 (no crossing)",
+    "reason": "RSI=42.79 (no crossing)",
     "executed": false
    },
    "C_combo": {
     "action": "HOLD",
-    "reason": "trend=up, RSI=48.52",
+    "reason": "trend=up, RSI=42.79",
     "executed": false
    },
    "D_buy_and_hold": {
@@ -20611,7 +20645,7 @@
    },
    "E_short_momentum": {
     "action": "HOLD",
-    "reason": "30min momentum -0.38% < +0.25%",
+    "reason": "30min momentum -0.36% < +0.25%",
     "executed": false
    }
   },
