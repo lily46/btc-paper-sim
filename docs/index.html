@@ -52,6 +52,7 @@
   <h1>Bitcoin 自動売買シミュレーター</h1>
   <div class="meta" id="meta"></div>
   <div class="banner">⚠️ これは <strong>仮想売買（ペーパートレード）</strong> です。実際の注文・入出金・取引所口座への接続は一切行っていません。</div>
+  <div class="meta">FX（F〜H：G MAクロスL/S・H レバ買い持ち）のダッシュボード → <a id="fxLink" href="fx.html">こちら</a></div>
 
   <h2>実験ステータス</h2>
   <div class="grid" id="status"></div>
@@ -236,6 +237,7 @@ function render(d){
 // 単体HTML (docs/report.html) ではここにデータが埋め込まれる。
 // file:// で開くと fetch がブロックされるため、ローカル閲覧は report.html を使う。
 const EMBEDDED = /*__EMBEDDED_DATA__*/ null /*__END_EMBEDDED_DATA__*/;
+if (EMBEDDED) document.getElementById("fxLink").href = "fx-report.html";
 
 (EMBEDDED
   ? Promise.resolve(EMBEDDED)
