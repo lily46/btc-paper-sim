@@ -48,6 +48,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # キュー待ちしたジョブが起動時点の古いコミットで動くと、処理済みティックを
+          # やり直して push に失敗し続ける。常に開始時点の main から始める。
+          ref: main
           # shallow clone だと push 競合時の rebase が失敗しうるので全履歴を取る
           # （リポジトリは小さいので clone コストは無視できる）
           fetch-depth: 0

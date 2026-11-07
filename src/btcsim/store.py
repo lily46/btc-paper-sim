@@ -175,7 +175,7 @@ class Store:
             if push.returncode == 0:
                 return True
             log.warning("git push 失敗 (%d/%d): %s", i + 1, attempts,
-                        (push.stderr or "").strip().splitlines()[-1:] or "")
+                        (push.stderr or "").strip())
             fetch = run("fetch", "origin", branch, check=False)
             if fetch.returncode != 0:
                 log.warning("git fetch 失敗: %s", (fetch.stderr or "").strip())
