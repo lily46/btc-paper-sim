@@ -3,9 +3,9 @@
  "common_period": {
   "available": true,
   "from_jst": "2026-11-03T11:40:02+09:00",
-  "to_jst": "2026-11-09T04:50:02+09:00",
-  "hours": 137.17,
-  "btc_change_pct": "-1.0950",
+  "to_jst": "2026-11-09T05:00:02+09:00",
+  "hours": 137.33,
+  "btc_change_pct": "-1.0769",
   "strategies": {
    "A_ma_cross": {
     "start_equity_jpy": "1000000.0000",
@@ -44,7 +44,7 @@
    }
   }
  },
- "generated_at_utc": "2026-11-08T19:50:03+00:00",
+ "generated_at_utc": "2026-11-08T20:00:03+00:00",
  "paper_trading_only": true,
  "experiment": {
   "started_at_jst": "2026-11-02T22:21:20+09:00",
@@ -54,16 +54,16 @@
   "timezone": "Asia/Tokyo",
   "product_code": "BTC_JPY",
   "initial_capital_jpy": "1000000",
-  "remaining_seconds": 63077,
-  "remaining_human": "0日 17時間 31分"
+  "remaining_seconds": 62477,
+  "remaining_human": "0日 17時間 21分"
  },
  "market": {
-  "last_fetch_jst": "2026-11-09T04:50:02+09:00",
-  "ltp": "12015249.0",
+  "last_fetch_jst": "2026-11-09T05:00:02+09:00",
+  "ltp": "12017447.0",
   "best_bid": "12014354.0",
-  "best_ask": "12017471.0",
+  "best_ask": "12018003.0",
   "start_price": "12242596.0",
-  "price_change_pct": "-1.8570",
+  "price_change_pct": "-1.8391",
   "source": "bitFlyer Public API (/v1/getticker, /v1/getboard, /v1/getexecutions)"
  },
  "strategies": {
@@ -91,13 +91,13 @@
    "ends_at_jst": "2026-11-09T22:21:20+09:00",
    "window_status": "running",
    "window_finished_at_jst": null,
-   "remaining_seconds": 63077,
-   "remaining_human": "0日 17時間 31分",
+   "remaining_seconds": 62477,
+   "remaining_human": "0日 17時間 21分",
    "own_window": false,
    "avg_hold_minutes": "456.0",
    "open_position": false,
    "position_entry_price": null,
-   "last_reason": "no cross (short=12003756, long=12020055)",
+   "last_reason": "no cross (short=12007502, long=12019790)",
    "exit_breakdown": {
     "signal": 10
    },
@@ -130,13 +130,13 @@
    "ends_at_jst": "2026-11-09T22:21:20+09:00",
    "window_status": "running",
    "window_finished_at_jst": null,
-   "remaining_seconds": 63077,
-   "remaining_human": "0日 17時間 31分",
+   "remaining_seconds": 62477,
+   "remaining_human": "0日 17時間 21分",
    "own_window": false,
    "avg_hold_minutes": "0.0",
    "open_position": true,
    "position_entry_price": "12371599.7085",
-   "last_reason": "RSI=47.81 (no crossing)",
+   "last_reason": "RSI=50.69 (no crossing)",
    "exit_breakdown": {
     "signal": 1
    },
@@ -169,13 +169,13 @@
    "ends_at_jst": "2026-11-09T22:21:20+09:00",
    "window_status": "running",
    "window_finished_at_jst": null,
-   "remaining_seconds": 63077,
-   "remaining_human": "0日 17時間 31分",
+   "remaining_seconds": 62477,
+   "remaining_human": "0日 17時間 21分",
    "own_window": false,
    "avg_hold_minutes": "90.0",
    "open_position": false,
    "position_entry_price": null,
-   "last_reason": "trend=up, RSI=47.81",
+   "last_reason": "trend=up, RSI=50.69",
    "exit_breakdown": {
     "signal": 1
    },
@@ -208,8 +208,8 @@
    "ends_at_jst": "2026-11-09T22:21:20+09:00",
    "window_status": "running",
    "window_finished_at_jst": null,
-   "remaining_seconds": 63077,
-   "remaining_human": "0日 17時間 31分",
+   "remaining_seconds": 62477,
+   "remaining_human": "0日 17時間 21分",
    "own_window": false,
    "avg_hold_minutes": null,
    "open_position": true,
@@ -245,13 +245,13 @@
    "ends_at_jst": "2026-11-10T11:40:02+09:00",
    "window_status": "running",
    "window_finished_at_jst": null,
-   "remaining_seconds": 110999,
-   "remaining_human": "1日 6時間 49分",
+   "remaining_seconds": 110399,
+   "remaining_human": "1日 6時間 39分",
    "own_window": true,
    "avg_hold_minutes": "90.0",
    "open_position": false,
    "position_entry_price": null,
-   "last_reason": "30min momentum +0.04% < +0.25%",
+   "last_reason": "30min momentum +0.06% < +0.25%",
    "exit_breakdown": {
     "trend_reversal": 16,
     "take_profit": 5,
@@ -322,32 +322,32 @@
   }
  },
  "stats": {
-  "runs": 909,
+  "runs": 910,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 26,
   "missed_schedules": 20,
-  "expected_ticks": 903,
-  "observed_ticks": 883
+  "expected_ticks": 904,
+  "observed_ticks": 884
  },
  "last_run": {
-  "tick_id": "1794167400",
-  "at_jst": "2026-11-09T04:50:02+09:00",
+  "tick_id": "1794168000",
+  "at_jst": "2026-11-09T05:00:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
     "action": "HOLD",
-    "reason": "no cross (short=12003756, long=12020055)",
+    "reason": "no cross (short=12007502, long=12019790)",
     "executed": false
    },
    "B_rsi_reversal": {
     "action": "HOLD",
-    "reason": "RSI=47.81 (no crossing)",
+    "reason": "RSI=50.69 (no crossing)",
     "executed": false
    },
    "C_combo": {
     "action": "HOLD",
-    "reason": "trend=up, RSI=47.81",
+    "reason": "trend=up, RSI=50.69",
     "executed": false
    },
    "D_buy_and_hold": {
@@ -357,7 +357,7 @@
    },
    "E_short_momentum": {
     "action": "HOLD",
-    "reason": "30min momentum +0.04% < +0.25%",
+    "reason": "30min momentum +0.06% < +0.25%",
     "executed": false
    }
   },
@@ -1248,7 +1248,8 @@
    "2026-11-09T04:20:02+09:00",
    "2026-11-09T04:30:02+09:00",
    "2026-11-09T04:40:02+09:00",
-   "2026-11-09T04:50:02+09:00"
+   "2026-11-09T04:50:02+09:00",
+   "2026-11-09T05:00:02+09:00"
   ],
   "price": [
    12242596.0,
@@ -2133,7 +2134,8 @@
    12010331.0,
    12010000.0,
    12012287.0,
-   12015249.0
+   12015249.0,
+   12017447.0
   ],
   "equity": {
    "A_ma_cross": [
@@ -3008,6 +3010,7 @@
     994504.7447,
     994610.2091,
     994670.0821,
+    994278.7523,
     994278.7523,
     994278.7523,
     994278.7523,
@@ -3904,6 +3907,7 @@
     1007355.1422,
     1007481.6044,
     1007399.0628,
+    1007739.1659,
     1007739.1659
    ],
    "C_combo": [
@@ -4123,6 +4127,7 @@
     998103.5075,
     997689.9598,
     997286.3265,
+    996744.2017,
     996744.2017,
     996744.2017,
     996744.2017,
@@ -5674,6 +5679,7 @@
     978530.5687,
     978686.1256,
     978584.5939,
+    979002.9436,
     979002.9436
    ],
    "E_short_momentum": [
@@ -6523,6 +6529,7 @@
     989521.3144,
     989421.4523,
     989311.8726,
+    989054.875,
     989054.875,
     989054.875,
     989054.875,
