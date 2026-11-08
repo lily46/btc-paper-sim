@@ -3708,10 +3708,10 @@
    {
     "ts": 1794178800,
     "o": "11792775.0",
-    "h": "11861762.0",
+    "h": "11990514.0",
     "l": "11792746.0",
-    "c": "11852086.0",
-    "v": "6.70128468"
+    "c": "11955093.0",
+    "v": "17.65042811"
    }
   ],
   "1h": [
@@ -5500,10 +5500,10 @@
    {
     "ts": 1794178800,
     "o": "11792775.0",
-    "h": "11861762.0",
+    "h": "11990514.0",
     "l": "11792746.0",
-    "c": "11852086.0",
-    "v": "6.70128468"
+    "c": "11955093.0",
+    "v": "17.65042811"
    }
   ]
  },
@@ -17170,6 +17170,19 @@
    "best_bid_size": "0.0011908",
    "best_ask_size": "0.0010634",
    "source": "bitflyer:getticker"
+  },
+  {
+   "tick_id": "1794180000",
+   "ts": 1794180002,
+   "fetched_at_jst": "2026-11-09T08:20:02+09:00",
+   "fetched_at_utc": "2026-11-08T23:20:02+00:00",
+   "exchange_timestamp": "2026-11-08T23:20:01.853",
+   "ltp": "11955093.0",
+   "best_bid": "11951006.0",
+   "best_ask": "11958647.0",
+   "best_bid_size": "0.05086579",
+   "best_ask_size": "0.0221352",
+   "source": "bitflyer:getticker"
   }
  ],
  "equity_history": [
@@ -27932,6 +27945,18 @@
     "D_buy_and_hold": "965627.5707",
     "E_short_momentum": "988807.5363"
    }
+  },
+  {
+   "ts": 1794180002,
+   "jst": "2026-11-09T08:20:02+09:00",
+   "price": "11955093.0",
+   "equity": {
+    "A_ma_cross": "994278.7523",
+    "B_rsi_reversal": "1003758.1849",
+    "C_combo": "996744.2017",
+    "D_buy_and_hold": "973840.9621",
+    "E_short_momentum": "989657.2835"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -28837,7 +28862,8 @@
   "1794177600",
   "1794178200",
   "1794178800",
-  "1794179400"
+  "1794179400",
+  "1794180000"
  ],
  "trades": [
   {
@@ -30785,17 +30811,17 @@
   }
  ],
  "stats": {
-  "runs": 930,
+  "runs": 931,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 27,
   "missed_schedules": 20,
-  "expected_ticks": 923,
-  "observed_ticks": 903
+  "expected_ticks": 924,
+  "observed_ticks": 904
  },
  "last_run": {
-  "tick_id": "1794179400",
-  "at_jst": "2026-11-09T08:10:02+09:00",
+  "tick_id": "1794180000",
+  "at_jst": "2026-11-09T08:20:02+09:00",
   "status": "ok",
   "decisions": {
    "A_ma_cross": {
@@ -30819,12 +30845,12 @@
     "executed": false
    },
    "E_short_momentum": {
-    "action": "BUY",
-    "reason": "momentum 30min +0.57%, 60min +0.64%",
-    "executed": true
+    "action": "HOLD",
+    "reason": "holding 10min, pnl +0.75%",
+    "executed": false
    }
   },
-  "trades": 1,
+  "trades": 0,
   "strategies_added": []
  },
  "strategy_windows": {
