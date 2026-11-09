@@ -43,19 +43,19 @@
   "G_ma_cross_ls": {
    "strategy_id": "G_ma_cross_ls",
    "initial_jpy": "1000000",
-   "collateral_jpy": "1006783.9703",
+   "collateral_jpy": "1006783.4238",
    "position": {
     "side": "SHORT",
     "size": "0.01670453",
     "entry_price": "11966811.6010",
     "entry_ts": 1794159002,
     "entry_reason": "dead cross (short=12014703 long=12014799); long -> short",
-    "swap_paid": "61.5463",
-    "last_swap_ts": 1794226202
+    "swap_paid": "62.0928",
+    "last_swap_ts": 1794226802
    },
    "realized_pnl": "7267.9449",
    "fees_paid": "0.0000",
-   "swap_paid": "483.9746",
+   "swap_paid": "484.5211",
    "trades": 31,
    "opens": 16,
    "closes": 15,
@@ -75,19 +75,19 @@
   "H_long_hold_fx": {
    "strategy_id": "H_long_hold_fx",
    "initial_jpy": "1000000",
-   "collateral_jpy": "995028.6610",
+   "collateral_jpy": "995023.2621",
    "position": {
     "side": "LONG",
     "size": "0.16506735",
     "entry_price": "12116266.2077",
     "entry_ts": 1793690806,
     "entry_reason": "initial leveraged long (benchmark)",
-    "swap_paid": "4971.3390",
-    "last_swap_ts": 1794226202
+    "swap_paid": "4976.7379",
+    "last_swap_ts": 1794226802
    },
    "realized_pnl": "0",
    "fees_paid": "0.0000",
-   "swap_paid": "4971.3390",
+   "swap_paid": "4976.7379",
    "trades": 1,
    "opens": 1,
    "closes": 0,
@@ -3485,10 +3485,10 @@
    {
     "ts": 1794225600,
     "o": "11735075.0",
-    "h": "11764897.0",
+    "h": "11777043.0",
     "l": "11728858.0",
-    "c": "11747742.0",
-    "v": "3.47399909"
+    "c": "11776431.0",
+    "v": "9.14479957"
    }
   ],
   "1h": [
@@ -5183,10 +5183,10 @@
    {
     "ts": 1794225600,
     "o": "11735075.0",
-    "h": "11764897.0",
+    "h": "11777043.0",
     "l": "11728858.0",
-    "c": "11747742.0",
-    "v": "3.47399909"
+    "c": "11776431.0",
+    "v": "9.14479957"
    }
   ]
  },
@@ -16812,6 +16812,19 @@
    "best_bid_size": "0.001",
    "best_ask_size": "0.01039433",
    "source": "bitflyer:getticker:FX_BTC_JPY"
+  },
+  {
+   "tick_id": "1794226800",
+   "ts": 1794226802,
+   "fetched_at_jst": "2026-11-09T21:20:02+09:00",
+   "fetched_at_utc": "2026-11-09T12:20:02+00:00",
+   "exchange_timestamp": "2026-11-09T12:20:02.707",
+   "ltp": "11776431.0",
+   "best_bid": "11774721.0",
+   "best_ask": "11777004.0",
+   "best_bid_size": "0.004",
+   "best_ask_size": "0.022",
+   "source": "bitflyer:getticker:FX_BTC_JPY"
   }
  ],
  "equity_history": [
@@ -25754,6 +25767,16 @@
     "G_ma_cross_ls": "1010395.0821",
     "H_long_hold_fx": "934287.3083"
    }
+  },
+  {
+   "ts": 1794226802,
+   "jst": "2026-11-09T21:20:02+09:00",
+   "price": "11776431.0",
+   "equity": {
+    "F_momentum_ls": "995180.9485",
+    "G_ma_cross_ls": "1009954.0706",
+    "H_long_hold_fx": "938645.2998"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -26650,7 +26673,8 @@
   "1794224400",
   "1794225000",
   "1794225600",
-  "1794226200"
+  "1794226200",
+  "1794226800"
  ],
  "trades": [
   {
@@ -30505,39 +30529,39 @@
   }
  ],
  "stats": {
-  "runs": 921,
+  "runs": 922,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 27,
   "missed_schedules": 0,
-  "expected_ticks": 893,
-  "observed_ticks": 894
+  "expected_ticks": 894,
+  "observed_ticks": 895
  },
  "last_run": {
-  "tick_id": "1794226200",
-  "at_jst": "2026-11-09T21:10:02+09:00",
+  "tick_id": "1794226800",
+  "at_jst": "2026-11-09T21:20:02+09:00",
   "status": "ok",
   "decisions": {
    "F_momentum_ls": {
     "action": "HOLD",
-    "reason": "30min -0.21% / 60min +0.43%: no signal",
+    "reason": "30min +0.19% / 60min -0.07%: no signal",
     "executed": false,
     "side": "",
     "swap_jpy": "0"
    },
    "G_ma_cross_ls": {
     "action": "HOLD",
-    "reason": "holding SHORT, pnl +1.81%",
+    "reason": "holding SHORT, pnl +1.59%",
     "executed": false,
     "side": "",
-    "swap_jpy": "0.5452"
+    "swap_jpy": "0.5465"
    },
    "H_long_hold_fx": {
     "action": "HOLD",
     "reason": "long & hold: holding (no further trades)",
     "executed": false,
     "side": "",
-    "swap_jpy": "5.3868"
+    "swap_jpy": "5.3989"
    }
   },
   "trades": 0
