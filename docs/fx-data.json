@@ -1,6 +1,6 @@
 {
  "disclaimer": "これは仮想売買（ペーパートレード）の記録です。実際の注文・入出金は一切行っていません。証拠金取引（ショート可・レバレッジあり）のシミュレーションです。",
- "generated_at_utc": "2026-11-09T00:50:03+00:00",
+ "generated_at_utc": "2026-11-09T00:50:22+00:00",
  "paper_trading_only": true,
  "market": "margin",
  "experiment": {
@@ -14,7 +14,7 @@
   "leverage": "2",
   "liquidation_margin_ratio_pct": "80.0000",
   "swap_rate_per_day_pct": "0.0400",
-  "remaining_seconds": 110203,
+  "remaining_seconds": 110184,
   "remaining_human": "1日 6時間 36分"
  },
  "market_data": {
@@ -42,7 +42,7 @@
    "position_pnl_pct": "-0.1134",
    "margin_ratio_pct": "996.7076",
    "effective_leverage": "0.2007",
-   "hold_minutes": "0.0",
+   "hold_minutes": "0.3",
    "trades": 111,
    "opens": 56,
    "closes": 55,
@@ -96,7 +96,7 @@
    "position_pnl_pct": "0.6424",
    "margin_ratio_pct": "1015.1315",
    "effective_leverage": "0.1970",
-   "hold_minutes": "440.0",
+   "hold_minutes": "440.3",
    "trades": 31,
    "opens": 16,
    "closes": 15,
@@ -147,7 +147,7 @@
    "position_pnl_pct": "-1.8851",
    "margin_ratio_pct": "97.6095",
    "effective_leverage": "2.0490",
-   "hold_minutes": "8243.3",
+   "hold_minutes": "8243.6",
    "trades": 1,
    "opens": 1,
    "closes": 0,
@@ -172,10 +172,10 @@
   }
  },
  "stats": {
-  "runs": 850,
+  "runs": 851,
   "api_errors": 0,
   "data_rejections": 0,
-  "skipped_duplicate_ticks": 24,
+  "skipped_duplicate_ticks": 25,
   "missed_schedules": 0,
   "expected_ticks": 825,
   "observed_ticks": 826
@@ -7940,10 +7940,10 @@
     "fx_pnl_jpy": "-4423.2729",
     "fx_trades": 111,
     "fx_shorts": 25,
-    "spot_pnl_jpy": "-11351.1693",
-    "spot_trades": 54,
-    "spot_pnl_since_fx_start_jpy": "-9876.9904",
-    "short_effect_jpy": "5453.7175"
+    "spot_pnl_jpy": "-11619.7066",
+    "spot_trades": 55,
+    "spot_pnl_since_fx_start_jpy": "-10145.5277",
+    "short_effect_jpy": "5722.2548"
    },
    "G_ma_cross_ls": {
     "fx_strategy": "G_ma_cross_ls",
@@ -7962,10 +7962,10 @@
     "fx_pnl_jpy": "-42305.5022",
     "fx_trades": 1,
     "fx_shorts": 0,
-    "spot_pnl_jpy": "-33379.6842",
+    "spot_pnl_jpy": "-30817.5167",
     "spot_trades": 1,
-    "spot_pnl_since_fx_start_jpy": "-20624.8653",
-    "short_effect_jpy": "-21680.6369"
+    "spot_pnl_since_fx_start_jpy": "-18062.6978",
+    "short_effect_jpy": "-24242.8044"
    }
   }
  },
