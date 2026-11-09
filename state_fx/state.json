@@ -19,19 +19,19 @@
   "F_momentum_ls": {
    "strategy_id": "F_momentum_ls",
    "initial_jpy": "1000000",
-   "collateral_jpy": "989854.0427",
+   "collateral_jpy": "989853.4859",
    "position": {
     "side": "SHORT",
     "size": "0.01699342",
     "entry_price": "11763375.3700",
     "entry_ts": 1794249002,
     "entry_reason": "momentum flipped down -0.34%; long -> short",
-    "swap_paid": "6.1237",
-    "last_swap_ts": 1794255602
+    "swap_paid": "6.6805",
+    "last_swap_ts": 1794256202
    },
    "realized_pnl": "-9763.7967",
    "fees_paid": "0.0000",
-   "swap_paid": "382.1606",
+   "swap_paid": "382.7174",
    "trades": 137,
    "opens": 69,
    "closes": 68,
@@ -51,51 +51,51 @@
   "G_ma_cross_ls": {
    "strategy_id": "G_ma_cross_ls",
    "initial_jpy": "1000000",
-   "collateral_jpy": "1009666.1772",
+   "collateral_jpy": "1009519.1946",
    "position": {
-    "side": "LONG",
-    "size": "0.01695972",
-    "entry_price": "11792644.8629",
-    "entry_ts": 1794232802,
-    "entry_reason": "golden cross (short=11777435 long=11777403); short -> long",
-    "swap_paid": "21.1459",
-    "last_swap_ts": 1794255602
+    "side": "SHORT",
+    "size": "0.01696366",
+    "entry_price": "11784011.0470",
+    "entry_ts": 1794256202,
+    "entry_reason": "dead cross (short=11786444 long=11787862); long -> short",
+    "swap_paid": "0",
+    "last_swap_ts": 1794256202
    },
-   "realized_pnl": "10177.3188",
+   "realized_pnl": "10030.8917",
    "fees_paid": "0.0000",
-   "swap_paid": "511.1416",
-   "trades": 33,
-   "opens": 17,
-   "closes": 16,
+   "swap_paid": "511.6971",
+   "trades": 35,
+   "opens": 18,
+   "closes": 17,
    "longs": 9,
-   "shorts": 8,
+   "shorts": 9,
    "wins": 5,
-   "losses": 11,
+   "losses": 12,
    "liquidations": 0,
    "peak_equity": "1016065.6866",
    "max_drawdown": "0.009879651908717453582788866910",
    "halted": false,
    "halt_reason": "",
-   "last_signal_key": "G:30m:1794231000:L:open",
-   "last_exit_ts": 1794232802,
-   "hold_minutes_total": "8850"
+   "last_signal_key": "G:30m:1794254400:S:open",
+   "last_exit_ts": 1794256202,
+   "hold_minutes_total": "9240"
   },
   "H_long_hold_fx": {
    "strategy_id": "H_long_hold_fx",
    "initial_jpy": "1000000",
-   "collateral_jpy": "994763.3639",
+   "collateral_jpy": "994757.9569",
    "position": {
     "side": "LONG",
     "size": "0.16506735",
     "entry_price": "12116266.2077",
     "entry_ts": 1793690806,
     "entry_reason": "initial leveraged long (benchmark)",
-    "swap_paid": "5236.6361",
-    "last_swap_ts": 1794255602
+    "swap_paid": "5242.0431",
+    "last_swap_ts": 1794256202
    },
    "realized_pnl": "0",
    "fees_paid": "0.0000",
-   "swap_paid": "5236.6361",
+   "swap_paid": "5242.0431",
    "trades": 1,
    "opens": 1,
    "closes": 0,
@@ -3622,9 +3622,17 @@
     "ts": 1794254400,
     "o": "11793869.0",
     "h": "11824182.0",
-    "l": "11791274.0",
-    "c": "11805728.0",
-    "v": "13.88632696"
+    "l": "11786907.0",
+    "c": "11793880.0",
+    "v": "19.90481637"
+   },
+   {
+    "ts": 1794256200,
+    "o": "11793445.0",
+    "h": "11793998.0",
+    "l": "11793445.0",
+    "c": "11793445.0",
+    "v": "0.01704573"
    }
   ],
   "1h": [
@@ -5384,9 +5392,9 @@
     "ts": 1794254400,
     "o": "11793869.0",
     "h": "11824182.0",
-    "l": "11791274.0",
-    "c": "11805728.0",
-    "v": "13.88632696"
+    "l": "11786907.0",
+    "c": "11793445.0",
+    "v": "19.92186210"
    }
   ]
  },
@@ -17649,6 +17657,19 @@
    "best_bid_size": "0.004",
    "best_ask_size": "0.08",
    "source": "bitflyer:getticker:FX_BTC_JPY"
+  },
+  {
+   "tick_id": "1794256200",
+   "ts": 1794256202,
+   "fetched_at_jst": "2026-11-10T05:30:02+09:00",
+   "fetched_at_utc": "2026-11-09T20:30:02+00:00",
+   "exchange_timestamp": "2026-11-09T20:30:01.707",
+   "ltp": "11793445.0",
+   "best_bid": "11792368.0",
+   "best_ask": "11794688.0",
+   "best_bid_size": "0.001",
+   "best_ask_size": "0.01308",
+   "source": "bitflyer:getticker:FX_BTC_JPY"
   }
  ],
  "equity_history": [
@@ -27081,6 +27102,16 @@
     "G_ma_cross_ls": "1009848.9205",
     "H_long_hold_fx": "943122.6694"
    }
+  },
+  {
+   "ts": 1794256202,
+   "jst": "2026-11-10T05:30:02+09:00",
+   "price": "11793445.0",
+   "equity": {
+    "F_momentum_ls": "989321.3772",
+    "G_ma_cross_ls": "1009338.0744",
+    "H_long_hold_fx": "941292.9381"
+   }
   }
  ],
  "processed_tick_ids": [
@@ -28026,7 +28057,8 @@
   "1794253800",
   "1794254400",
   "1794255000",
-  "1794255600"
+  "1794255600",
+  "1794256200"
  ],
  "trades": [
   {
@@ -32303,44 +32335,94 @@
    "exit_kind": "",
    "signal_key": "F:rev:1794247802:open",
    "reason": "momentum flipped down -0.34%; long -> short"
+  },
+  {
+   "ts": "2026-11-10T05:30:02+09:00",
+   "strategy": "G_ma_cross_ls",
+   "action": "CLOSE",
+   "side": "LONG",
+   "price": "11784011.0470",
+   "size": "0.01695972",
+   "notional_jpy": "199853.5278",
+   "fee_jpy": "0.0000",
+   "swap_jpy": "21.7014",
+   "collateral_before": "1009665.6217",
+   "collateral_after": "1009519.1946",
+   "realized_pnl": "-146.4271",
+   "equity_after": "1009519.1946",
+   "margin_ratio": "",
+   "leverage": "2",
+   "spread_pct": "0.0001967374152502703443447490784",
+   "slippage_pct": "0.0005",
+   "hold_minutes": "390.00",
+   "entry_price": "11792644.8629",
+   "entry_reason": "golden cross (short=11777435 long=11777403); short -> long",
+   "exit_kind": "reversal",
+   "signal_key": "G:30m:1794254400:S",
+   "reason": "dead cross (short=11786444 long=11787862); long -> short"
+  },
+  {
+   "ts": "2026-11-10T05:30:02+09:00",
+   "strategy": "G_ma_cross_ls",
+   "action": "OPEN",
+   "side": "SHORT",
+   "price": "11784011.0470",
+   "size": "0.01696366",
+   "notional_jpy": "199899.9568",
+   "fee_jpy": "0.0000",
+   "swap_jpy": "0",
+   "collateral_before": "1009519.1946",
+   "collateral_after": "1009519.1946",
+   "realized_pnl": "0",
+   "equity_after": "1009338.0744",
+   "margin_ratio": "10.08929069689084090645913506",
+   "leverage": "2",
+   "spread_pct": "0.0001967374152502703443447490784",
+   "slippage_pct": "0.0005",
+   "hold_minutes": "",
+   "entry_price": "11784011.0470",
+   "entry_reason": "dead cross (short=11786444 long=11787862); long -> short",
+   "exit_kind": "",
+   "signal_key": "G:30m:1794254400:S:open",
+   "reason": "dead cross (short=11786444 long=11787862); long -> short"
   }
  ],
  "stats": {
-  "runs": 971,
+  "runs": 972,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 28,
   "missed_schedules": 0,
-  "expected_ticks": 942,
-  "observed_ticks": 943
+  "expected_ticks": 943,
+  "observed_ticks": 944
  },
  "last_run": {
-  "tick_id": "1794255600",
-  "at_jst": "2026-11-10T05:20:02+09:00",
+  "tick_id": "1794256200",
+  "at_jst": "2026-11-10T05:30:02+09:00",
   "status": "ok",
   "decisions": {
    "F_momentum_ls": {
     "action": "HOLD",
-    "reason": "holding SHORT 110min, pnl -0.36%",
+    "reason": "holding SHORT 120min, pnl -0.27%",
     "executed": false,
     "side": "",
-    "swap_jpy": "0.5573"
+    "swap_jpy": "0.5568"
    },
    "G_ma_cross_ls": {
-    "action": "HOLD",
-    "reason": "holding LONG, pnl +0.09%",
-    "executed": false,
-    "side": "",
-    "swap_jpy": "0.5561"
+    "action": "REVERSE",
+    "reason": "dead cross (short=11786444 long=11787862); long -> short",
+    "executed": true,
+    "side": "SHORT",
+    "swap_jpy": "0.5555"
    },
    "H_long_hold_fx": {
     "action": "HOLD",
     "reason": "long & hold: holding (no further trades)",
     "executed": false,
     "side": "",
-    "swap_jpy": "5.4121"
+    "swap_jpy": "5.4070"
    }
   },
-  "trades": 0
+  "trades": 2
  }
 }
