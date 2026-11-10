@@ -1,21 +1,21 @@
 {
  "disclaimer": "これは仮想売買（ペーパートレード）の記録です。実際の注文・入出金は一切行っていません。証拠金取引（ショート可・レバレッジあり）のシミュレーションです。",
- "generated_at_utc": "2026-11-10T07:20:03+00:00",
+ "generated_at_utc": "2026-11-10T07:30:02+00:00",
  "paper_trading_only": true,
  "market": "margin",
  "experiment": {
   "started_at_jst": "2026-11-03T16:26:46+09:00",
   "ends_at_jst": "2026-11-10T16:26:46+09:00",
-  "status": "running",
-  "finished_at_jst": null,
+  "status": "finished",
+  "finished_at_jst": "2026-11-10T16:30:02+09:00",
   "timezone": "Asia/Tokyo",
   "product_code": "FX_BTC_JPY",
   "initial_capital_jpy": "1000000",
   "leverage": "2",
   "liquidation_margin_ratio_pct": "80.0000",
   "swap_rate_per_day_pct": "0.0400",
-  "remaining_seconds": 403,
-  "remaining_human": "0日 0時間 6分"
+  "remaining_seconds": 0,
+  "remaining_human": "0日 0時間 0分"
  },
  "market_data": {
   "last_fetch_jst": "2026-11-10T16:20:02+09:00",
@@ -42,7 +42,7 @@
    "position_pnl_pct": "-0.2043",
    "margin_ratio_pct": "986.4568",
    "effective_leverage": "0.2027",
-   "hold_minutes": "60.0",
+   "hold_minutes": "70.0",
    "trades": 145,
    "opens": 73,
    "closes": 72,
@@ -96,7 +96,7 @@
    "position_pnl_pct": "-0.2883",
    "margin_ratio_pct": "1004.3363",
    "effective_leverage": "0.1991",
-   "hold_minutes": "200.0",
+   "hold_minutes": "210.0",
    "trades": 39,
    "opens": 20,
    "closes": 19,
@@ -147,7 +147,7 @@
    "position_pnl_pct": "-2.7016",
    "margin_ratio_pct": "96.6485",
    "effective_leverage": "2.0694",
-   "hold_minutes": "10073.3",
+   "hold_minutes": "10083.3",
    "trades": 1,
    "opens": 1,
    "closes": 0,
@@ -172,7 +172,7 @@
   }
  },
  "stats": {
-  "runs": 1039,
+  "runs": 1040,
   "api_errors": 0,
   "data_rejections": 0,
   "skipped_duplicate_ticks": 30,
